@@ -3,7 +3,7 @@
 
 #include "rbmap.h"
 
+int get_conf_map(const char *filename, struct RBMap *map);
 
-struct RBMap *get_conf_map(const char*);
 
 #endif  // CONFIG_H_

@@ -14,7 +14,7 @@ int main(const int argc, const char **argv)
 {
 	int ret = 0;
 	char *new_str = NULL;
-	RBSet *conf_set;
+	struct RBSet *conf_set;
 
 	if (!(conf_set = rbset_new(compare, free)))
 		return -1;

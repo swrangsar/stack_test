@@ -165,6 +165,28 @@ error:
 	return NULL;
 }
 
+int rbmap_init(struct RBMap *tree, CompareFunc cmp, DestroyFunc key_dst, DestroyFunc val_dst)
+{
+	int ret_val = -1;
+
+	if (tree) {
+		if (cmp) {
+			tree->root = NULL;
+			tree->cmp_func = cmp;
+			tree->key_dst_func = key_dst;
+			tree->val_dst_func = val_dst;
+			ret_val = 0;
+		} else {
+			log_msg("null compare func\n");
+		}
+	} else {
+		log_msg("null tree pointer\n");
+	}
+
+error:
+	return ret_val;
+}
+
 int rbmap_insert(struct RBMap *tree, void *key, void *value)
 {
 	if (!tree)
@@ -518,10 +540,10 @@ static void remove_cases(struct RBMap *tree, struct rbnode *node)
 
 			if (!granpa)
 				tree->root = sibling;
-	
+
 			break;
 
-		/* remove case 3	*/
+			/* remove case 3	*/
 		} else if (Black == parent->color && Black == sibling->color
 				&& (!sibling->left || Black == sibling->left->color)
 				&& (!sibling->right || Black == sibling->right->color)) {
@@ -602,10 +624,10 @@ static void inorder(struct RBMap *tree, TraverseFunc trav_func, void *data)
 
 	if (!tree)
 		log_msg("inorder: null tree!");
-		
+
 	prev = NULL;
 	curr = tree->root;
-	
+
 	while (curr) {
 		if (prev == curr->parent) {
 			if (!(next = curr->left)) {

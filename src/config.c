@@ -6,10 +6,8 @@
 #include <string.h>
 
 #include "rbmap.h"
+#include "logmsg.h"
 
-
-#define log_err(M)	{perror("error: config: " M); goto error;}
-#define log_msg(M)	{fprintf(stderr, "error: config: " M "\n"); goto error;}
 
 #define KEY_SIZE	512
 #define VAL_SIZE	512
@@ -29,25 +27,27 @@ static int compare(const void *a, const void *b)
 	return strcmp((const char *)a, (const char *)b);
 }
 
-struct RBMap *get_conf_map(const char *filename)
+int get_conf_map(const char *filename, struct RBMap *map)
 {
+	int ret_val = -1;
 	char line[LINE_MAX];
-	struct RBMap *map = NULL;
 	FILE *conf_file = NULL;
 
-	if (!(conf_file = fopen(filename, "r")))
-		log_err("get_conf_map: fopen");
+	if ((conf_file = fopen(filename, "r"))) {
+		if ((map = rbmap_new(compare, free, free))) {
+			while (fgets(line, sizeof(line), conf_file))
+				process_line(line, map);
+			ret_val = 0;
+		} else {
+			log_err("get_conf_map: rbmap_new null\n");
+		}
 
-	if (!(map = rbmap_new(compare, free, free)))
-		log_msg("get_conf_map: rbmap_new null");
-
-	while (fgets(line, sizeof(line), conf_file))
-		process_line(line, map);
-	
-error:
-	if (conf_file)
 		fclose(conf_file);
-	return map;
+	} else {
+		log_err("get_conf_map: fopen");
+	}
+
+	return ret_val;
 }
 
 static void process_line(const char *line, struct RBMap *map)
