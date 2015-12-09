@@ -11,7 +11,10 @@ int main(const int argc, const char **argv)
 	if (!stack)
 		return -1;
 	
+	printf("test: push: %d\n", my_num);
 	stack_push(stack, (void *)my_num);
+	
+	printf("test: pop: %d\n", (int)stack_pop(stack));
 
 	stack_destroy(stack);
 	

@@ -10,6 +10,10 @@
 
 typedef struct _Node Node;
 
+static void stack_clear(Stack *stack);
+
+
+
 struct _Node {
 	Node *next;
 	void *data;
