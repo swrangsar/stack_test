@@ -4,7 +4,6 @@
 
 #include <errno.h>
 
-#include "lock.h"
 
 #define log_err(M)	{perror("error: " M); goto error;}
 #define log_msg(M)	{fprintf(stderr, "error: " M "\n"); goto error;}
@@ -18,21 +17,19 @@ struct _Node {
 
 struct _Stack {
 	Node *head;
-	unsigned int lock;
+	DestroyFunc destroy_func;
 };
 
 
-Stack* stack_new(void)
+Stack* stack_new(DestroyFunc destroy_func)
 {
 	Stack *stack;
 	
-	stack = malloc(sizeof(*stack));
-	if (!stack)
+	if (!(stack = malloc(sizeof(*stack))))
 		log_err("stack_new");
 
 	stack->head = NULL;
-	stack->lock = 0;
-
+	stack->destroy_func = destroy_func;
 error:
 	return stack; 
 }
@@ -44,26 +41,56 @@ int stack_push(Stack *stack, void *data)
 
 	if (!stack)
 		log_msg("stack_push: null stack");
-	
 	if (!data)
 		goto out;
 
-	node = malloc(sizeof(*node));
-	if (!node)
+	if (!(node = malloc(sizeof(*node))))
 		log_err("stack_push: node allocate failed!");
 
 	node->data = data;
-
-	lock(&stack->lock);
-
 	node->next = stack->head;
 	stack->head = node;
-	
-	unlock(&stack->lock);
 out:
 	return 0;
 error:
 	return -1;
+}
+
+void *stack_pop(Stack *stack)
+{
+	Node *node;
+	void *data;
+
+	if (!stack)
+		log_msg("stack_pop: null stack!");
+	
+	if (!(node = stack->head))
+		return NULL;
+
+	data = node->data;
+	stack->head = node->next;
+	free(node);
+	
+	return data;
+error:
+	return NULL;
+}
+
+static void stack_clear(Stack *stack)
+{
+	void *data;
+	DestroyFunc destroy_func;
+
+	if (!stack)
+		return;
+	destroy_func = stack->destroy_func;
+	
+	if (destroy_func) {
+		while ((data = stack_pop(stack)))
+			destroy_func(data);
+	} else {
+		while ((data = stack_pop(stack)));
+	}
 }
 
 void stack_destroy(Stack* stack)
@@ -71,12 +98,7 @@ void stack_destroy(Stack* stack)
 	if (!stack)
 		return;
 
-	lock(&stack->lock);
-	if (stack->head)
-		free(stack->head);
+	stack_clear(stack);
 
-	stack->head = NULL;
-
-	unlock(&stack->lock);
-	free((void *)stack);
+	free(stack);
 }
