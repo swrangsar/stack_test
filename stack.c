@@ -23,7 +23,7 @@ Stack* stack_new(void)
 {
 	Stack *stack;
 	
-	stack = (Stack *)malloc(sizeof(Stack));
+	stack = malloc(sizeof(*stack));
 	if (!stack)
 		log_err("stack_new");
 
@@ -44,7 +44,7 @@ int stack_push(Stack *stack, void *data)
 	if (!data)
 		goto out;
 
-	node = (Node *)malloc(sizeof(Node));
+	node = malloc(sizeof(*node));
 	if (!node)
 		log_err("stack_push: node allocate failed!");
 
