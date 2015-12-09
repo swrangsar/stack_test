@@ -5,8 +5,10 @@
 #include <errno.h>
 #include <linux/futex.h>
 #include <sys/syscall.h>
-#include <sys/time.h>
+#include <unistd.h>
 
+
+long syscall(long number, ...);
 
 static void lock_slowpath(unsigned int*);
 static void unlock_slowpath(unsigned int*, unsigned int);
@@ -21,7 +23,7 @@ void lock(unsigned int *addr)
 void unlock(unsigned int *addr)
 {
 	unsigned int prev;
-	
+
 	prev = (int) __sync_fetch_and_and(addr, 0);
 
 	if (prev != 1)
