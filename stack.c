@@ -72,6 +72,8 @@ void stack_destroy(Stack* stack)
 		return;
 
 	lock(&stack->lock);
+	if (stack->head)
+		free(stack->head);
 
 	stack->head = NULL;
 
