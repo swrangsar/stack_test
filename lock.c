@@ -8,6 +8,8 @@
 #include <unistd.h>
 
 
+#define die(M) 	{perror("error: " M); exit(EXIT_FAILURE);}
+
 long syscall(long number, ...);
 
 static void lock_slowpath(unsigned int*);
@@ -32,8 +34,10 @@ void unlock(unsigned int *addr)
 
 static void lock_slowpath(unsigned int *addr)
 {
-	while ((int)__sync_val_compare_and_swap(addr, 1, 2))
-		syscall(__NR_futex, addr, FUTEX_WAIT, 2, NULL);
+	while ((int)__sync_val_compare_and_swap(addr, 1, 2)) {
+		if (-1 == syscall(__NR_futex, addr, FUTEX_WAIT, 2, NULL))
+			die("lock_slowpath");
+	}
 }
 
 static void unlock_slowpath(unsigned int *addr, unsigned int prev)
@@ -43,5 +47,6 @@ static void unlock_slowpath(unsigned int *addr, unsigned int prev)
 		exit(EXIT_FAILURE);
 	}
 
-	syscall(__NR_futex, addr, FUTEX_WAKE, 1, NULL);
+	if (-1 == syscall(__NR_futex, addr, FUTEX_WAKE, 1, NULL))
+		die("unlock_slowpath");
 }
