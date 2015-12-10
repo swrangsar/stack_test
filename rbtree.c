@@ -32,28 +32,25 @@ struct _RBTree {
 };
 
 
-static Node *node_new(const void *);
+static Node *node_new(void *);
 static void node_destroy(Node*);
 
-static int insert(RBTree *, Node*, Node*);
+static int insert(RBTree *, void*); 
 
-static void rotate_left(Node const*);
-static void rotate_right(Node const*);
-
+static void rotate_left(Node*);
+static void rotate_right(Node*);
 static Node *grandparent(const Node *);
-static Node *uncle(const Node *);
+static Node *get_uncle(const Node *);
+static Node *get_sibling(const Node*);
+static void insert_cases(RBTree*, Node*);
 
-static void rbnodeDel(rbtree *, rbnode *);
-static void _rbtreeDel(rbtree *, rbnode *);
-static void insert_cases(rbtree *, rbnode *);
-
-static rbnode *sibling(const rbnode *);
-static void _rbtreeRemove(rbtree *, rbnode *, const void *);
-static void rbnodeRemove(rbtree *, rbnode *);
-static rbnode *getPred(rbtree *, rbnode *);
-static void removeChild(rbtree *, rbnode *);
-static void replaceChild(rbtree *, rbnode *, rbnode *);
-static void remove_cases(rbtree *, rbnode *);
+static void rbtree_clear(RBTree*, Node*);
+static int tree_remove(RBTree *, void const*);
+static int remove_node(RBTree*, Node*);
+static Node *get_pred(RBTree*, Node*);
+static int remove_child(RBTree*, Node*);
+static void replace_child(RBTree*, Node*, Node*);
+static void remove_cases(RBTree*, Node*);
 
 
 
@@ -65,7 +62,7 @@ RBTree* rbtree_new(CompareFunc cmp, DestroyFunc dst)
 	if (!tree)
 		log_err("rbtree_new");
 	if (!cmp)
-		log_err("rbtree_new: compare_func is NULL!";
+		log_err("rbtree_new: null compare_func!");
 
 	tree->root = NULL;
 	tree->cmp_func = cmp;
@@ -76,7 +73,7 @@ error:
 	return NULL;
 }
 
-static Node *node_new(const void *data)
+static Node *node_new(void *data)
 {
 	Node *node;
 	
@@ -94,7 +91,7 @@ error:
 	return NULL;
 }
 
-int rbtree_insert(RBTree *tree, const void *data)
+int rbtree_insert(RBTree *tree, void *data)
 {
 	if (!tree)
 		log_msg("rbtree_insert: null tree");
@@ -107,7 +104,7 @@ error:
 	return -1;
 }
 
-static int insert(RBTree *tree, const void *data)
+static int insert(RBTree *tree, void *data)
 {
 	int res;
 	Node *curr;
@@ -155,6 +152,9 @@ static int insert(RBTree *tree, const void *data)
 		}
 	}
 
+	if (data != curr->data && tree->dst_func)
+		tree->dst_func(curr->data);
+
 	curr->data = data;
 	return 0;
 
@@ -173,7 +173,7 @@ static Node *grandparent(const Node *node)
 		return NULL;
 }
 
-static Node *uncle(const Node *node)
+static Node *get_uncle(const Node *node)
 {
 	Node *parent;
 	Node *grandpa;
@@ -184,12 +184,12 @@ static Node *uncle(const Node *node)
 		return NULL;
 }
 
-static void rotate_left(Node const *node)
+static void rotate_left(Node *node)
 {
 	Node *parent;
 	Node *right;
 	
-	if (!n)
+	if (!node)
 		return;
 	if (!(right = node->right))
 		return;
@@ -210,7 +210,7 @@ static void rotate_left(Node const *node)
 		node->right->parent = node;
 }
 
-static void rotate_right(Node const *node)
+static void rotate_right(Node *node)
 {
 	Node *parent;
 	Node *left;
@@ -236,23 +236,340 @@ static void rotate_right(Node const *node)
 		node->left->parent = node;
 }
     
-void rbtreeRemove(rbtree *t, const void *data)
+static void insert_cases(RBTree *tree, Node *node)
 {
-	errcheck(t, "rbtreeRemove: tree shouldn't be null!");
-	errcheck(data, "rbtreeRemove: data shouldn't be null!");
-	if (!t->root) return; 
-	_rbtreeRemove(t, t->root, data);
+	Node *parent;
+	Node *granpa;
+	Node *uncle;
+
+	if (!tree)
+		log_msg("insert_cases: tree is null!");
+
+	while (1) {
+		if (!node)
+			log_msg("insert_case1: node is null!");
+
+		if (!(parent = node->parent)) {
+			node->color = BLACK;
+			return;
+		}
+
+		/* insert case 2	*/
+		if (BLACK == parent->color)
+			return;
+
+		/* insert case 3	*/
+		granpa = grandparent(node);
+		if (!granpa)
+			log_msg("insert_case3: granpa is null!");
+
+		uncle = get_uncle(node);
+		if (uncle && RED == uncle->color) {
+			parent->color = BLACK;
+			uncle->color = BLACK;
+			granpa->color = RED;
+			node = granpa;
+			continue;
+		}
+
+		/* insert case 4	*/
+		if (node == parent->right && parent == granpa->left) {
+			rotate_left(parent);
+			node = parent;
+		} else if (node == parent->left && parent == granpa->right) {
+			rotate_right(parent);
+			node = parent;
+		}
+
+		/* insert case 5	*/
+		if (!(parent = node->parent))
+			log_msg("insert_case5: parent is null!");
+		if (!(granpa = grandparent(node)))
+			log_msg("insert_case5: granpa is null!");
+
+		parent->color = BLACK;
+		granpa->color = RED;
+		(node == parent->left)?rotate_right(granpa):rotate_left(granpa);
+
+		if (!(parent->parent))
+			tree->root = parent;
+
+		return;
+	}
+
+error:
+	return;
 }
 
-void rbtreeDel(rbtree *t)
+int rbtree_remove(RBTree *tree, void *data)
 {
-	errcheck(t, "rbtree is null!");
-	if (t->root) _rbtreeDel(t, t->root);
-	if (t->klass) rbtreeClassDel(t->klass);
-	t->root = NULL;
-	t->klass = NULL;
-	free(t);
-	t = NULL;
+	if (!tree)
+		log_msg("rbtree_remove: tree is null!");
+	if (!data)
+		log_msg("rbtree_remove: data is null!");
+
+	return tree_remove(tree, data);
+error:
+	return -1;
+}
+
+static int tree_remove(RBTree *tree, void const *data)
+{
+	int res;
+	Node *root;
+	Node *curr;
+	CompareFunc cmp_func;
+
+	if (!data)
+		log_msg("remove: data is null!");
+	if (!(root = tree->root))
+		return 0;
+		
+	if (!(cmp_func = tree->cmp_func))
+		log_msg("remove: cmp_func is null!");
+
+	curr = root;
+	while ((res = cmp_func(data, curr->data))) {
+		if (res < 0) {
+			if (curr->left)
+				curr = curr->left;
+			else
+				return -1;
+		} else {
+			if (curr->right)
+				curr = curr->right;
+			else
+				return -1;
+		}
+	}
+
+	return remove_node(tree, curr);
+error:
+	return -1;
+}
+
+static int remove_node(RBTree *tree, Node *node)
+{
+	Node *pred;
+	void *temp_data;
+
+	if (!tree)
+		log_msg("remove_node: tree is null!");
+	if (!node)
+		log_msg("remove_node: node is null!");
+	
+	pred = node;
+	if (node->left && node->right) {
+		pred = get_pred(tree, node);
+
+		temp_data = node->data;
+		node->data = pred->data;
+		pred->data = temp_data;
+	}
+
+	return remove_child(tree, pred);
+error:
+	return -1;
+}
+
+static Node *get_pred(RBTree *tree, Node *node)
+{
+	Node *pred;
+
+	if (!(pred = node->left))
+		log_msg("get_pred: predecessor is NULL!");
+
+	while (pred->right)
+		pred = pred->right;
+
+	return pred;
+error:
+	return NULL;
+}
+
+static int remove_child(RBTree *tree, Node *node)
+{
+	Node *child;
+
+	if (!tree)
+		log_msg("remove_child: tree is null!");
+	if (!node)
+		log_msg("remove_child: node is null!");
+
+	child = node->left?node->left:node->right;
+
+	if (BLACK == node->color) {
+		if (child && RED == child->color)
+			child->color = BLACK;
+		else
+			remove_cases(tree, node);
+	}
+	replace_child(tree, node, child);
+	
+	if (tree->dst_func)
+		tree->dst_func(node->data);
+	node_destroy(node);
+
+	return 0;
+error:
+	return -1;
+}
+
+static void remove_cases(RBTree *tree, Node *node)
+{
+	Node *parent;
+	Node *sibling;
+	Node *granpa;
+
+	if (!tree)
+		log_msg("remove_cases: tree is null!");
+
+	while (1) {
+		/* remove case 1	*/
+		if (!node)
+			log_msg("remove_case1: node is null!");
+		if (!(parent = node->parent))
+			return;
+
+		/* remove case 2	*/
+		if (!(sibling = get_sibling(node)))
+			log_msg("remove_case2: sibling is null!");
+
+		granpa = parent->parent;
+		if (RED == sibling->color) {
+			parent->color = RED;
+			sibling->color = BLACK;
+
+			if (node == parent->left)
+				rotate_left(parent);
+			else
+				rotate_right(parent);
+
+			if (!granpa)
+				tree->root = sibling;
+		}
+
+		/* remove case 3	*/
+		granpa = parent->parent;
+		if (!(sibling = get_sibling(node)))
+			log_msg("remove_case2: sibling is null!");
+
+		if (BLACK == parent->color && BLACK == sibling->color
+				&& (!sibling->left || BLACK == sibling->left->color)
+				&& (!sibling->right || BLACK == sibling->right->color)) {
+			sibling->color = RED;
+			node = parent;
+			continue;
+		}
+
+		/* remove case 4	*/
+		if (RED == parent->color && BLACK == sibling->color
+				&& (!sibling->left || BLACK == sibling->left->color)
+				&& (!sibling->right || BLACK == sibling->right->color)) {
+			parent->color = BLACK;
+			sibling->color = RED;
+			return;
+		}
+
+		/* remove case 5	*/
+		if (BLACK != sibling->color)
+			log_msg("remove_case5: sibling is red!");
+
+		if (node == parent->left
+				&& (sibling->left && RED == sibling->left->color)
+				&& (!sibling->right || BLACK == sibling->right->color)) {
+			sibling->color = RED;
+			sibling->left->color = BLACK;
+			rotate_right(sibling);
+		} else if (node == parent->right
+				&& (sibling->right && RED == sibling->right->color)
+				&& (!sibling->left || BLACK == sibling->left->color)) {
+			sibling->color = RED;
+			sibling->right->color = BLACK;
+			rotate_left(sibling);
+		}
+
+		/* remove case 6	*/
+		if (!(parent = node->parent))
+			log_msg("remove_case6: parent is null!");
+		if (!(sibling = get_sibling(node)))
+			log_msg("remove_case6: sibling is null!");
+
+		sibling->color = parent->color;
+		parent->color = BLACK;
+		if (node == parent->left) {
+			rotate_left(parent);
+			if (!sibling->right)
+				log_msg("remove_case6: sibling's child null!");
+			if (RED != sibling->right->color)
+				log_msg("remove_case6: sibling's child not RED!");
+
+			sibling->right->color = BLACK;
+		} else {
+			rotate_right(parent);
+			if (!sibling->left)
+				log_msg("remove_case6: sibling's child null!");
+			if (RED != sibling->left->color)
+				log_msg("remove_case6: sibling's child not RED!");
+
+			sibling->left->color = BLACK;
+		}
+
+		if (!sibling->parent)
+			tree->root = sibling;
+		return;
+	}
+
+error:
+	return;
+}
+
+static void replace_child(RBTree *tree, Node *node, Node *child)
+{
+	Node *parent;
+	Color temp_color;
+
+	if (!tree)
+		log_msg("replace_child: tree is null!");
+	if (!node)
+		log_msg("replace_child: node is null!");
+
+	parent = node->parent;
+	if (parent) {
+		if (node == parent->left)
+			parent->left = child;
+		else
+			parent->right = child;
+
+		if (child)
+			child->parent = parent;
+	} else {
+		tree->root = child;
+		if (child)
+			child->parent = NULL;
+	}
+
+	if (child) {
+		temp_color = child->color;
+		child->color = node->color;
+		node->color = temp_color;
+	} else {
+		node->color = BLACK;
+	}
+error:
+	return;
+}
+
+void rbtree_destroy(RBTree *tree)
+{
+	if (!tree)
+		return;
+
+	if (tree->root)
+		rbtree_clear(tree, tree->root);
+	tree->root = NULL;
+
+	free(tree);
 }
 
 static void node_destroy(Node *node)
@@ -260,270 +577,33 @@ static void node_destroy(Node *node)
 	free(node);
 }
 
-static void _rbtreeDel(rbtree *t, rbnode *n)
+static void rbtree_clear(RBTree *tree, Node *node)
 {
-	errcheck(t, "rbtree is null!");
-	if (n->left) _rbtreeDel(t, n->left);
-	if (n->right) _rbtreeDel(t, n->right);
-	rbnodeDel(t, n);
-}
-
-static void insert_cases(RBTree *t, Node *n)
-{
-	while (1) {
-		debug("insert case 1\n");
-		errcheck(n, "new inserted node cannot be null!");
-		Node *p = n->parent;
-		if (!p) {
-			n->color = BLACK;
-			return;
-		}
-
-		debug("insert case 2\n");
-		errcheck(p, "p is null!");
-		if (p->color == BLACK) return;
-
-		debug("insert case 3\n");
-		Node *g = grandparent(n);
-		Node *u = uncle(n);
-		errcheck(g, "grandparent does not exist!");
-		if (u && RED == u->color) {
-			p->color = BLACK;
-			u->color = BLACK;
-			g->color = RED;
-			n = g;
-			continue;
-		}
-
-		debug("insert case 4\n");
-		if (n == p->right && p == g->left) {
-			rotate_left(p);
-			n = p;
-		} else if (n == p->left && p == g->right) {
-			rotate_right(p);
-			n = p;
-		} else {
-			// do nothing
-		}
-
-		debug("insert case 5\n");
-		p = n->parent;
-		g = grandparent(n);
-		errcheck(p, "parent does not exist!");
-		errcheck(g, "grandparent does not exist!");
-		p->color = BLACK;
-		g->color = RED;
-		(n == p->left)?rotate_right(g):rotate_left(g);
-		if (!(p->parent)) {
-			debug("insert_case5: p parent is null!\n");
-			t->root = p;
-		}
+	if (!tree)
 		return;
-	}
+	if (!node)
+		return;
+
+	if (node->left)
+		rbtree_clear(tree, node->left);
+	if (node->right)
+		rbtree_clear(tree, node->right);
+
+	if (tree->dst_func)
+		tree->dst_func(node->data);
+	node_destroy(node);
 }
 
-
-// ****************************
-// removal functions
-// ****************************
-
-
-static rbnode *sibling(const rbnode *n)
+static Node *get_sibling(const Node *node)
 {
-    errcheck(n, "sibling: node n shouldn't be null!");
-    rbnode *p = n->parent;
-    errcheck(p, "sibling: parent shouldn't be null!");
-    return (n == p->left)?(p->right):(p->left);
-}
+	Node *parent;
 
+	if (!node)
+		log_msg("sibling: node is null!");
+	if (!(parent = node->parent))
+		log_msg("sibling: parent is null!");
 
-static void _rbtreeRemove(rbtree *t, rbnode *n, const void *d)
-{
-    errcheck(t, "tree is null!");
-    errcheck(n, "node is null!");
-    errcheck(d, "data is null!");
-    errcheck(t->klass, "tree klass is null!");
-    errcheck(t->klass->cmp, "cmp fn ptr is null!");
-    errcheck(n->data, "node data is null!");
-    int res = t->klass->cmp(d, n->data);
-
-    while (res) {
-        if (res < 0) {
-            if (!n->left) return;
-            n = n->left;
-        } else {
-            if (!n->right) return;
-            n = n->right;
-        }
-        errcheck(n->data, "node data is null!");
-        res = t->klass->cmp(d, n->data);
-    }
-    rbnodeRemove(t, n);
-}
-
-static void rbnodeRemove(rbtree *t, rbnode *n)
-{
-    errcheck(t, "tree is null!");
-    errcheck(n, "node is null!");
-    printf("data to be deleted is ");
-    errcheck(t->klass, "tree klass is null!");
-    errcheck(t->klass->shw, "tree klash shw is null!");
-    t->klass->shw(n->data);
-    rbnode *p = n;
-    if (n->left && n->right) {
-        p = getPred(t, n);
-        void *tempData = n->data;
-        n->data = p->data;
-        p->data = tempData;
-    }
-    removeChild(t, p);
-}
-
-static rbnode *getPred(rbtree *t, rbnode *n)
-{
-    errcheck(t, "tree is null!");
-    errcheck(n, "node is null!");
-    errcheck(n->left, "predecessor is null!");
-    rbnode *p = n->left;
-    while (p->right) {
-        p = p->right;
-    }
-    return p;
-}
-
-static void removeChild(rbtree *t, rbnode *n)
-{
-    errcheck(t, "tree is null!");
-    errcheck(n, "node is null!");
-    printf("trying to remove child with data ");
-    errcheck(t->klass, "tree klass is null!");
-    errcheck(t->klass->shw, "tree klass shw is null!");
-    t->klass->shw(n->data);
-
-    rbnode *c = (n->left)?(n->left):(n->right);
-
-    if (n->color == BLACK) {
-        if (c && c->color == RED)
-            c->color = BLACK;
-        else
-            remove_cases(t, n);
-    }
-    replaceChild(t, n, c);
-    rbnodeDel(t, n);
-}
-
-static void replaceChild(rbtree *t, rbnode *n, rbnode *c)
-{
-    errcheck(t, "tree is null!");
-    errcheck(n, "node is null!");
-    rbnode *p = n->parent;
-    if (p) {
-        if (n == p->left) {
-            p->left = c;
-        } else {
-            p->right = c;
-        }
-        if (c) c->parent = p;
-    } else {
-        t->root = c;
-        if (c) c->parent = NULL;
-    }
-    if (c) {
-        unsigned char tempc = c->color;
-        c->color = n->color;
-        n->color = tempc;
-    } else {
-        n->color = BLACK;
-    }
-}
-
-static void remove_cases(rbtree *t, rbnode *n)
-{
-    while (1) {
-        errcheck(t, "tree is null!");
-        errcheck(n, "node is null!");
-        debug("remove case 1\n");
-        rbnode *p = n->parent;
-        if (!p) return;
-    
-        debug("remove case 2\n");
-        errcheck(p, "parent is null!");
-        rbnode *s = sibling(n);
-        errcheck(s, "sibling is null!");
-        rbnode *g = p->parent;
-        if (s->color == RED) {
-            p->color = RED;
-            s->color = BLACK;
-            if (n == p->left) {
-                rotate_left(p);
-            } else {
-                rotate_right(p);
-            }
-            if (!g) t->root = s;
-        }
-
-        debug("remove case 3\n");
-        g = p->parent;
-        s = sibling(n);
-        errcheck(s, "sibling is null!");
-        if (p->color == BLACK 
-            && s->color == BLACK
-            && (!s->left || s->left->color == BLACK)
-            && (!s->right || s->right->color == BLACK)) {
-            s->color = RED;
-            n = p;
-            continue;
-        } 
-
-        debug("remove case 4\n");
-        if (p->color == RED
-            && s->color == BLACK
-            && (!s->left || s->left->color == BLACK)
-            && (!s->right || s->right->color == BLACK)) {
-            p->color = BLACK;
-            s->color = RED;
-            return;
-        }
-
-        debug("remove case 5\n");
-        errcheck((s->color == BLACK), "sibling is red!");
-    
-        if (n == p->left &&
-            (s->left && s->left->color == RED) &&
-            (!s->right || s->right->color == BLACK)) {
-            s->color = RED;
-            s->left->color = BLACK;
-            rotate_right(s);
-        } else if (n == p->right &&
-            (s->right && s->right->color == RED) &&
-            (!s->left || s->left->color == BLACK)) {
-            s->color = RED;
-            s->right->color = BLACK;
-            rotate_left(s);
-        } else {
-        }
-
-        debug("remove case 6\n");
-        p = n->parent;
-        s = sibling(n);
-        errcheck(p, "parent is null!");
-        errcheck(s, "sibling is null!");
-        
-        s->color = p->color;
-        p->color = BLACK;
-        if (n == p->left) {
-            rotate_left(p);
-            errcheck(s->right, "rem case 6: sibling's child is null!");
-            errcheck(s->right->color == RED, "rem case 6: sibling's child is not red!");
-            s->right->color = BLACK;
-        } else {
-            rotate_right(p);
-            errcheck(s->left, "rem case 6: sibling's child is null!");
-            errcheck(s->left->color == RED, "rem case 6: sibling's child is not red!");
-            s->left->color = BLACK;
-        }
-        if (!s->parent) t->root = s;
-        printf("remove_case6 exited\n");
-        return;
-    }
+	return (node == parent->left)?parent->right:parent->left;
+error:
+	return NULL;
 }

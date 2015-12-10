@@ -8,8 +8,8 @@ typedef void (*DestroyFunc) (void *);
 
 
 RBTree *rbtree_new(CompareFunc, DestroyFunc);
-void rbtree_insert(RBTree*, const void *);
-void rbtree_remove(RBTree*, const void *);
+int rbtree_insert(RBTree*, void *);
+int rbtree_remove(RBTree*, void *);
 void rbtree_destroy(RBTree*);
 
 #endif
