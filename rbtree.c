@@ -5,6 +5,8 @@
 
 #include <errno.h>
 
+#include "stack.h"
+
 #define log_err(M)	{perror("error: RBTree: " M); goto error;}
 #define log_msg(M)	{fprintf(stderr, "error: RBTree: " M "\n"); goto error;}
 
@@ -32,25 +34,26 @@ struct _RBTree {
 };
 
 
-static Node *node_new(void *);
-static void node_destroy(Node*);
-
-static int insert(RBTree *, void*); 
-
 static void rotate_left(Node*);
 static void rotate_right(Node*);
 static Node *grandparent(const Node *);
 static Node *get_uncle(const Node *);
 static Node *get_sibling(const Node*);
+
+static Node *node_new(void *);
+static void node_destroy(Node*);
+
+static int insert(RBTree *, void*); 
 static void insert_cases(RBTree*, Node*);
 
-static void rbtree_clear(RBTree*, Node*);
-static int tree_remove(RBTree *, void const*);
+static int remove_data(RBTree *, void*);
 static int remove_node(RBTree*, Node*);
 static Node *get_pred(RBTree*, Node*);
 static int remove_child(RBTree*, Node*);
 static void replace_child(RBTree*, Node*, Node*);
 static void remove_cases(RBTree*, Node*);
+
+static void rbtree_clear(RBTree*);
 
 
 
@@ -308,12 +311,12 @@ int rbtree_remove(RBTree *tree, void *data)
 	if (!data)
 		log_msg("rbtree_remove: data is null!");
 
-	return tree_remove(tree, data);
+	return remove_data(tree, data);
 error:
 	return -1;
 }
 
-static int tree_remove(RBTree *tree, void const *data)
+static int remove_data(RBTree *tree, void *data)
 {
 	int res;
 	Node *root;
@@ -562,14 +565,8 @@ error:
 
 void rbtree_destroy(RBTree *tree)
 {
-	if (!tree)
-		return;
-
-	if (tree->root)
-		rbtree_clear(tree, tree->root);
-	tree->root = NULL;
-
-	free(tree);
+	if (tree)
+		rbtree_clear(tree);
 }
 
 static void node_destroy(Node *node)
@@ -577,21 +574,37 @@ static void node_destroy(Node *node)
 	free(node);
 }
 
-static void rbtree_clear(RBTree *tree, Node *node)
+static void rbtree_clear(RBTree *tree)
 {
+	Node *curr;
+	DestroyFunc dst_func;
+	Stack *stack;
+
 	if (!tree)
 		return;
-	if (!node)
+	if (!(curr = tree->root))
 		return;
+	
+	dst_func = tree->dst_func;
+	stack = stack_new(dst_func);
 
-	if (node->left)
-		rbtree_clear(tree, node->left);
-	if (node->right)
-		rbtree_clear(tree, node->right);
+	do {
+		stack_push(stack, curr->left);
+		stack_push(stack, curr->right);
+		
+		if (dst_func)
+			dst_func(curr->data);
+		node_destroy(curr);
+		curr = NULL;
+		curr = stack_pop(stack);
+	} while (curr);
+	
+	tree->root = NULL;
+	free(tree);
+	tree = NULL;
 
-	if (tree->dst_func)
-		tree->dst_func(node->data);
-	node_destroy(node);
+	stack_destroy(stack);
+	stack = NULL;
 }
 
 static Node *get_sibling(const Node *node)

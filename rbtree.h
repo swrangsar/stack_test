@@ -1,11 +1,9 @@
 #ifndef _RBTREE_H_
 #define _RBTREE_H_
 
+#include "types.h"
+
 typedef struct _RBTree RBTree;
-
-typedef int (*CompareFunc) (const void *, const void *);
-typedef void (*DestroyFunc) (void *);
-
 
 RBTree *rbtree_new(CompareFunc, DestroyFunc);
 int rbtree_insert(RBTree*, void *);
