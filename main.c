@@ -1,10 +1,12 @@
 #include "rbtree.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 #include <string.h>
 
-#define MAX_TIMES	9977
+#define MAX_TIMES	971
+#define MAX_NUM		99999999
 #define BUF_SIZE	128
 
 int compare(const void *a, const void *b)
@@ -23,7 +25,7 @@ void destroy_str(void *data)
 int main(const int argc, const char **argv)
 {
 	RBTree *num_tree;
-	int my_num = 719203;
+	unsigned int my_num = 719203981;
 	int i;
 	char buf[BUF_SIZE+1];
 	char *new_str = NULL;
@@ -35,12 +37,13 @@ int main(const int argc, const char **argv)
 		return -1;
 
 	for (i = 0; i < MAX_TIMES; ++i) {
-		my_num = (my_num ^ (my_num >> 3));
-		my_num += (my_num << 5);
-		my_num %= MAX_TIMES;
+		my_num += (unsigned int)time(NULL);
+		my_num ^= (my_num << 1);
+		my_num ^= (my_num >> 3);
+		my_num %= MAX_NUM;
 		
 /*		printf("ins %d\n", my_num); */
-		sprintf(buf, "%d", my_num);
+		sprintf(buf, "%u", my_num);
 		len = strlen(buf);
 		new_str = malloc(sizeof(char) * (1 + len));
 		if (new_str) {
@@ -54,11 +57,12 @@ int main(const int argc, const char **argv)
 	}
 
 	for (i = 0; i < MAX_TIMES; ++i) {
-		my_num = (my_num ^ (my_num >> 7));
-		my_num += (my_num << 3);
-		my_num %= MAX_TIMES;
+		my_num += (unsigned int)time(NULL);
+		my_num ^= (my_num << 1);
+		my_num ^= (my_num >> 3);
+		my_num %= MAX_NUM;
 /*		printf("del %d\n", my_num); */
-		sprintf(buf, "%d", my_num);
+		sprintf(buf, "%u", my_num);
 		printf("d %s\n", buf);
 	
 		if (rbtree_remove(num_tree, (void *)buf))

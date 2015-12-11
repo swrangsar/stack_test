@@ -34,19 +34,20 @@ struct _RBTree {
 };
 
 
-static void rotate_left(Node*);
-static void rotate_right(Node*);
+static Node *node_new(void *);
+static void node_destroy(Node*);
 static Node *grandparent(const Node *);
 static Node *get_uncle(const Node *);
 static Node *get_sibling(const Node*);
+static void rotate_left(Node*);
+static void rotate_right(Node*);
 
-static Node *node_new(void *);
-static void node_destroy(Node*);
 
 static int insert(RBTree *, void*); 
 static void insert_cases(RBTree*, Node*);
 
-static int remove_data(RBTree *, void*);
+static Node *search(RBTree *tree, const void *data);
+
 static int remove_node(RBTree*, Node*);
 static Node *get_pred(RBTree*, Node*);
 static int remove_child(RBTree*, Node*);
@@ -56,25 +57,6 @@ static void remove_cases(RBTree*, Node*);
 static void rbtree_clear(RBTree*);
 
 
-
-RBTree* rbtree_new(CompareFunc cmp, DestroyFunc dst)
-{
-	RBTree *tree;
-	
-	tree = malloc(sizeof(*tree));
-	if (!tree)
-		log_err("rbtree_new");
-	if (!cmp)
-		log_err("rbtree_new: null compare_func!");
-
-	tree->root = NULL;
-	tree->cmp_func = cmp;
-	tree->dst_func = dst;
-
-	return tree;
-error:
-	return NULL;
-}
 
 static Node *node_new(void *data)
 {
@@ -90,6 +72,117 @@ static Node *node_new(void *data)
 	node->color = RED;
 
 	return node;
+error:
+	return NULL;
+}
+
+static Node *get_sibling(const Node *node)
+{
+	Node *parent;
+
+	if (!node)
+		log_msg("sibling: node is null!");
+	if (!(parent = node->parent))
+		log_msg("sibling: parent is null!");
+
+	return (node == parent->left)?parent->right:parent->left;
+error:
+	return NULL;
+}
+
+static Node *grandparent(const Node *node)
+{
+	if (node && node->parent)
+		return node->parent->parent;
+	else
+		return NULL;
+}
+
+static Node *get_uncle(const Node *node)
+{
+	Node *parent;
+	Node *grandpa;
+
+	if (node && (parent = node->parent) && (grandpa = parent->parent))
+		return (parent == grandpa->left)?grandpa->right:grandpa->left;
+	else
+		return NULL;
+}
+
+static void rotate_left(Node *node)
+{
+	Node *parent;
+	Node *right;
+	
+	if (!node)
+		return;
+	if (!(right = node->right))
+		return;
+	
+	if ((parent = node->parent)) {
+		if (node == parent->left)
+			parent->left = right;
+		else
+			parent->right = right;
+	}
+
+	node->right = right->left;
+	node->parent = right;
+	right->left = node;
+	right->parent = parent;
+
+	if (node->right)
+		node->right->parent = node;
+}
+
+static void rotate_right(Node *node)
+{
+	Node *parent;
+	Node *left;
+
+	if (!node)
+		return;
+	if (!(left = node->left))
+		return;
+
+	if ((parent = node->parent)) {
+		if (node == parent->left)
+			parent->left = left;
+		else
+			parent->right = left;
+	}
+
+	node->left = left->right;
+	node->parent = left;
+	left->right = node;
+	left->parent = parent;
+	
+	if (node->left)
+		node->left->parent = node;
+}
+
+static void node_destroy(Node *node)
+{
+	free(node);
+}
+
+
+    
+RBTree* rbtree_new(CompareFunc cmp, DestroyFunc dst)
+{
+	RBTree *tree;
+	
+	tree = malloc(sizeof(*tree));
+	if (!tree)
+		log_err("rbtree_new");
+	if (!cmp)
+		log_err("rbtree_new: null compare_func!");
+
+	tree->root = NULL;
+	tree->cmp_func = cmp;
+	tree->dst_func = dst;
+
+	return tree;
 error:
 	return NULL;
 }
@@ -168,77 +261,6 @@ error:
 	return -1;
 }
 
-static Node *grandparent(const Node *node)
-{
-	if (node && node->parent)
-		return node->parent->parent;
-	else
-		return NULL;
-}
-
-static Node *get_uncle(const Node *node)
-{
-	Node *parent;
-	Node *grandpa;
-
-	if (node && (parent = node->parent) && (grandpa = parent->parent))
-		return (parent == grandpa->left)?grandpa->right:grandpa->left;
-	else
-		return NULL;
-}
-
-static void rotate_left(Node *node)
-{
-	Node *parent;
-	Node *right;
-	
-	if (!node)
-		return;
-	if (!(right = node->right))
-		return;
-	
-	if ((parent = node->parent)) {
-		if (node == parent->left)
-			parent->left = right;
-		else
-			parent->right = right;
-	}
-
-	node->right = right->left;
-	node->parent = right;
-	right->left = node;
-	right->parent = parent;
-
-	if (node->right)
-		node->right->parent = node;
-}
-
-static void rotate_right(Node *node)
-{
-	Node *parent;
-	Node *left;
-
-	if (!node)
-		return;
-	if (!(left = node->left))
-		return;
-
-	if ((parent = node->parent)) {
-		if (node == parent->left)
-			parent->left = left;
-		else
-			parent->right = left;
-	}
-
-	node->left = left->right;
-	node->parent = left;
-	left->right = node;
-	left->parent = parent;
-	
-	if (node->left)
-		node->left->parent = node;
-}
-    
 static void insert_cases(RBTree *tree, Node *node)
 {
 	Node *parent;
@@ -304,49 +326,70 @@ error:
 	return;
 }
 
-int rbtree_remove(RBTree *tree, void *data)
+void *rbtree_search(RBTree *tree, const void *data)
 {
+	Node *found;
+
+	if (!tree)
+		log_msg("rbtree_search: tree is null!");
+	if (!data)
+		log_msg("rbtree_search: key data is null!");
+
+	if ((found = search(tree, data)))
+		return found->data;
+
+error:
+	return NULL;
+}
+
+static Node *search(RBTree *tree, const void *data)
+{
+	int res;
+        Node *curr;
+        CompareFunc cmp_func;
+
+	if (!tree)
+		log_msg("search: tree is null!");
+        if (!data)
+                log_msg("search: data is null!");
+        if (!(curr = tree->root))
+                return NULL;
+        if (!(cmp_func = tree->cmp_func))
+                log_msg("search: cmp_func is null!");
+
+        while ((res = cmp_func(data, curr->data))) {
+                if (res < 0) {
+                        if (curr->left)
+                                curr = curr->left;
+                        else
+                                return NULL;
+                } else {
+                        if (curr->right)
+                                curr = curr->right;
+                        else
+                                return NULL;
+                }
+        }
+
+        return curr;
+error:
+        return NULL;
+}
+
+
+int rbtree_remove(RBTree *tree, const void *data)
+{
+	Node *found;
+
 	if (!tree)
 		log_msg("rbtree_remove: tree is null!");
 	if (!data)
 		log_msg("rbtree_remove: data is null!");
 
-	return remove_data(tree, data);
-error:
-	return -1;
-}
+	if ((found = search(tree, data)))
+		return remove_node(tree, found);
 
-static int remove_data(RBTree *tree, void *data)
-{
-	int res;
-	Node *root;
-	Node *curr;
-	CompareFunc cmp_func;
-
-	if (!data)
-		log_msg("remove: data is null!");
-	if (!(root = tree->root))
-		return 0;
-		
-	if (!(cmp_func = tree->cmp_func))
-		log_msg("remove: cmp_func is null!");
-
-	curr = root;
-	while ((res = cmp_func(data, curr->data))) {
-		if (res < 0) {
-			if (curr->left)
-				curr = curr->left;
-			else
-				return 0;
-		} else {
-			if (curr->right)
-				curr = curr->right;
-			else
-				return 0;
-		}
-	}
-
-	return remove_node(tree, curr);
+	return 0;
 error:
 	return -1;
 }
@@ -569,11 +612,6 @@ void rbtree_destroy(RBTree *tree)
 		rbtree_clear(tree);
 }
 
-static void node_destroy(Node *node)
-{
-	free(node);
-}
-
 static void rbtree_clear(RBTree *tree)
 {
 	Node *curr;
@@ -607,16 +645,3 @@ static void rbtree_clear(RBTree *tree)
 	stack = NULL;
 }
 
-static Node *get_sibling(const Node *node)
-{
-	Node *parent;
-
-	if (!node)
-		log_msg("sibling: node is null!");
-	if (!(parent = node->parent))
-		log_msg("sibling: parent is null!");
-
-	return (node == parent->left)?parent->right:parent->left;
-error:
-	return NULL;
-}
