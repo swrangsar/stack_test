@@ -18,4 +18,4 @@ $(TARGET): $(OBJS)
 	$(CC) $(CFLAGS) $<
 
 clean:
-	rm -f $(TARGET) $(OBJS) *.o
+	rm -f $(TARGET) *.o

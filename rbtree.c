@@ -337,12 +337,12 @@ static int remove_data(RBTree *tree, void *data)
 			if (curr->left)
 				curr = curr->left;
 			else
-				return -1;
+				return 0;
 		} else {
 			if (curr->right)
 				curr = curr->right;
 			else
-				return -1;
+				return 0;
 		}
 	}
 

@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define MAX_TIMES	99997
+
 int compare(const void *a, const void *b)
 {
 	int num_a = (int)a;
@@ -24,21 +26,21 @@ int main(const int argc, const char **argv)
 	if (!num_tree)
 		return -1;
 
-	for (i = 0; i < 100; ++i) {
+	for (i = 0; i < MAX_TIMES; ++i) {
 		my_num = (my_num ^ (my_num >> 3));
 		my_num += (my_num << 5);
-		my_num %= 100;
-		printf("ins i=%d, my_num=%d\n", i, my_num);
+		my_num %= MAX_TIMES;
+		printf("ins %d\n", my_num);
 	
 		if (rbtree_insert(num_tree, (void *)my_num))
 			fprintf(stderr, "error: rbtree_insert: num_tree: data=%d\n", my_num);
 	}
 
-	for (i = 0; i < 100; ++i) {
+	for (i = 0; i < MAX_TIMES; ++i) {
 		my_num = (my_num ^ (my_num >> 7));
 		my_num += (my_num << 3);
-		my_num %= 100;
-		printf("del i=%d, my_num=%d\n", i, my_num);
+		my_num %= MAX_TIMES;
+		printf("del %d\n", my_num);
 	
 		if (rbtree_remove(num_tree, (void *)my_num))
 			fprintf(stderr, "error: rbtree_remove: num_tree: data=%d\n", my_num);
