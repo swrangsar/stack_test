@@ -192,11 +192,9 @@ int rbmap_insert(RBMap *tree, void *key, void *value)
 {
 	if (!tree)
 		log_msg("rbmap_insert: null tree");
-	if (!key) 
-		log_msg("rbmap_insert: null key");
 
 	return insert(tree, key, value);
-		
+
 error:
 	return -1;
 }
