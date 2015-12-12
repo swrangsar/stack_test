@@ -1,7 +1,7 @@
 CC=gcc
-CFLAGS= -Wall -g -ansi -pedantic -c $(OPTFLAGS)
+CFLAGS= -O2 -Wall -g -ansi -pedantic -c $(OPTFLAGS)
 CFLAGS+= -MMD
-LFLAGS= -Wall -g -ansi -pedantic
+LFLAGS= -O2 -Wall -g -ansi -pedantic
 
 
 SOURCES=$(wildcard *.c)
@@ -17,8 +17,6 @@ $(TARGET): $(OBJS)
 
 %.o: %.c
 	$(CC) $(CFLAGS) $<
-
-%.c: %.h
 
 
 clean:
