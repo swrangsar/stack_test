@@ -9,9 +9,9 @@
 #define log_err(M)	{perror("error: config: " M); goto error;}
 #define log_msg(M)	{fprintf(stderr, "error: config: " M "\n"); goto error;}
 
-#define LINE_SIZE	2048
-#define KEY_SIZE	128
+#define KEY_SIZE	512
 #define VAL_SIZE	512
+#define LINE_SIZE	(KEY_SIZE + VAL_SIZE)
 
 
 static int compare(const void *a, const void *b)
