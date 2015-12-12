@@ -418,6 +418,10 @@ static Node *get_pred(RBTree *tree, Node *node)
 {
 	Node *pred;
 
+	if (!tree)
+		log_msg("get_pred: tree is null!");
+	if (!node)
+		log_msg("get_pred: node is null!");
 	if (!(pred = node->left))
 		log_msg("get_pred: predecessor is NULL!");
 
@@ -522,7 +526,7 @@ static void remove_cases(RBTree *tree, Node *node)
 		/* remove case 3	*/
 		granpa = parent->parent;
 		if (!(sibling = get_sibling(node)))
-			log_msg("remove_case2: sibling is null!");
+			log_msg("remove_case3: sibling is null!");
 
 		if (BLACK == parent->color && BLACK == sibling->color
 				&& (!sibling->left || BLACK == sibling->left->color)
