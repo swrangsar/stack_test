@@ -1,4 +1,4 @@
-#include "rbtree.h"
+#include "rbmap.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -24,14 +24,14 @@ void destroy_str(void *data)
 
 int main(const int argc, const char **argv)
 {
-	RBTree *num_tree;
+	RBMap *num_tree;
 	unsigned int my_num = 719203981;
 	int i;
 	char buf[BUF_SIZE+1];
 	char *new_str = NULL;
 	size_t len;
 
-	num_tree = rbtree_new(compare, destroy_str);
+	num_tree = rbmap_new(compare, destroy_str, NULL);
 
 	if (!num_tree)
 		return -1;
@@ -51,8 +51,8 @@ int main(const int argc, const char **argv)
 			printf("i %s\n", new_str);
 		}
 	
-		if (rbtree_insert(num_tree, (void *)new_str) && new_str)
-			fprintf(stderr, "error: rbtree_insert: num_tree: data=%s\n", new_str);
+		if (rbmap_insert(num_tree, (void *)new_str, NULL) && new_str)
+			fprintf(stderr, "error: rbmap_insert: num_tree: key=%s\n", new_str);
 		new_str = NULL;
 	}
 
@@ -65,12 +65,12 @@ int main(const int argc, const char **argv)
 		sprintf(buf, "%u", my_num);
 		printf("d %s\n", buf);
 	
-		if (rbtree_remove(num_tree, (void *)buf))
-			fprintf(stderr, "error: rbtree_remove: num_tree: data=%s\n", buf);
+		if (rbmap_remove(num_tree, (void *)buf))
+			fprintf(stderr, "error: rbmap_remove: num_tree: key=%s\n", buf);
 	}
 
 	
-	rbtree_destroy(num_tree);
+	rbmap_destroy(num_tree);
 	num_tree = NULL;
 	
 	return 0;
