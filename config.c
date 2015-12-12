@@ -17,7 +17,7 @@
 static int compare(const void *a, const void *b)
 {
 	if (!a)
-		return -1;
+		return b?-1:0;
 	if (!b)
 		return 1;
 
