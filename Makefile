@@ -1,5 +1,6 @@
 CC=gcc
 CFLAGS= -Wall -g -ansi -pedantic -c $(OPTFLAGS)
+CFLAGS+= -MMD
 LFLAGS= -Wall -g -ansi -pedantic
 
 
@@ -17,5 +18,10 @@ $(TARGET): $(OBJS)
 %.o: %.c
 	$(CC) $(CFLAGS) $<
 
+%.c: %.h
+
+
 clean:
-	rm -f $(TARGET) *.o
+	rm -f $(TARGET) *.o *.d
+
+-include $(OBJS:%.o=%.d)
