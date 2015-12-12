@@ -60,8 +60,6 @@ static Node *node_new(void *key, void *value)
 {
 	Node *node;
 	
-	if (!key)
-		log_msg("node_new: null key!");
 	if (!(node = malloc(sizeof(*node))))
 		log_err("node_new");
 
@@ -210,7 +208,7 @@ static int insert(RBMap *tree, void *key, void *value)
 	Node *new;
 	CompareFunc cmp_func;
 
-	if (!tree || !key)
+	if (!tree)
 		return -1;
 
 	if (!(curr = tree->root)) {
@@ -337,8 +335,6 @@ void *rbmap_search(RBMap *tree, const void *key)
 
 	if (!tree)
 		log_msg("rbmap_search: tree is null!");
-	if (!key)
-		log_msg("rbmap_search: key is null!");
 
 	if ((found = search(tree, key)))
 		return found->value;
@@ -355,8 +351,6 @@ static Node *search(RBMap *tree, const void *key)
 
 	if (!tree)
 		log_msg("search: tree is null!");
-        if (!key)
-                log_msg("search: key is null!");
         if (!(curr = tree->root))
                 return NULL;
         if (!(cmp_func = tree->cmp_func))
@@ -388,8 +382,6 @@ int rbmap_remove(RBMap *tree, const void *key)
 
 	if (!tree)
 		log_msg("rbmap_remove: tree is null!");
-	if (!key)
-		log_msg("rbmap_remove: key is null!");
 
 	if ((found = search(tree, key)))
 		return remove_node(tree, found);
