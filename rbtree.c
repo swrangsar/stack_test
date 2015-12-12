@@ -51,7 +51,6 @@ static int remove_child(RBTree*, Node*);
 static void replace_with_child(RBTree*, Node*, Node*);
 static void remove_cases(RBTree*, Node*);
 
-static void rbtree_clear(RBTree*);
 
 
 
@@ -169,11 +168,12 @@ RBTree* rbtree_new(CompareFunc cmp, DestroyFunc dst)
 {
 	RBTree *tree;
 	
+	if (!cmp)
+		log_msg("rbtree_new: null compare_func!");
+
 	tree = malloc(sizeof(*tree));
 	if (!tree)
 		log_err("rbtree_new");
-	if (!cmp)
-		log_err("rbtree_new: null compare_func!");
 
 	tree->root = NULL;
 	tree->cmp_func = cmp;
@@ -596,12 +596,6 @@ error:
 
 void rbtree_destroy(RBTree *tree)
 {
-	if (tree)
-		rbtree_clear(tree);
-}
-
-static void rbtree_clear(RBTree *tree)
-{
 	Node *curr;
 	DestroyFunc dst_func;
 	Stack *stack;
@@ -609,7 +603,7 @@ static void rbtree_clear(RBTree *tree)
 	if (!tree)
 		return;
 	if (!(curr = tree->root))
-		return;
+		goto out;
 	
 	dst_func = tree->dst_func;
 	stack = stack_new(dst_func);
@@ -625,10 +619,12 @@ static void rbtree_clear(RBTree *tree)
 		curr = stack_pop(stack);
 	} while (curr);
 	
-	tree->root = NULL;
-	free(tree);
-	tree = NULL;
 
 	stack_destroy(stack);
 	stack = NULL;
+
+	tree->root = NULL;
+out:
+	free(tree);
+	tree = NULL;
 }
