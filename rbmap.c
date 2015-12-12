@@ -622,8 +622,10 @@ void rbmap_destroy(RBMap *tree)
 	stack = stack_new(NULL);
 
 	do {
-		stack_push(stack, curr->left);
-		stack_push(stack, curr->right);
+		if (curr->left)
+			stack_push(stack, curr->left);
+		if (curr->right)
+			stack_push(stack, curr->right);
 		
 		if (key_dst_func)
 			key_dst_func(curr->key);

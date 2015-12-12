@@ -5,9 +5,10 @@
 
 typedef struct _Stack Stack;
 
-Stack* stack_new(DestroyFunc);
+Stack *stack_new(DestroyFunc);
 int stack_push(Stack*, void*);
-void *stack_pop(Stack*);
-void stack_destroy(Stack*);
+int stack_is_empty(Stack *);
+void *stack_pop(Stack *);
+void stack_destroy(Stack *);
 
 #endif

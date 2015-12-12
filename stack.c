@@ -25,7 +25,7 @@ struct _Stack {
 };
 
 
-Stack* stack_new(DestroyFunc destroy_func)
+Stack *stack_new(DestroyFunc destroy_func)
 {
 	Stack *stack;
 	
@@ -45,8 +45,6 @@ int stack_push(Stack *stack, void *data)
 
 	if (!stack)
 		log_msg("stack_push: null stack");
-	if (!data)
-		goto out;
 
 	if (!(node = malloc(sizeof(*node))))
 		log_err("stack_push: node allocate failed!");
@@ -54,10 +52,21 @@ int stack_push(Stack *stack, void *data)
 	node->data = data;
 	node->next = stack->head;
 	stack->head = node;
-out:
+
 	return 0;
 error:
 	return -1;
+}
+
+int stack_is_empty(Stack *stack)
+{
+	if (!stack)
+		log_msg("stack_is_empty: null stack!");
+
+	return !stack->head;
+	
+error:
+	return 1;
 }
 
 void *stack_pop(Stack *stack)
@@ -90,10 +99,11 @@ static void stack_clear(Stack *stack)
 	destroy_func = stack->destroy_func;
 	
 	if (destroy_func) {
-		while ((data = stack_pop(stack)))
-			destroy_func(data);
+		while (!stack_is_empty(stack))
+			destroy_func(data = stack_pop(stack));
 	} else {
-		while ((data = stack_pop(stack)));
+		while (!stack_is_empty(stack))
+			stack_pop(stack);
 	}
 }
 
