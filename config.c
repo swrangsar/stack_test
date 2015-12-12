@@ -29,8 +29,6 @@ RBMap *get_conf_map(const char *filename)
 	RBMap *map;
 	FILE *conf_file;
 	char line[LINE_SIZE];
-	char key[KEY_SIZE];
-	char val[VAL_SIZE];
 	
 
 	if (!(conf_file = fopen(filename, "r")))
@@ -51,6 +49,8 @@ RBMap *get_conf_map(const char *filename)
 		char *new_key = NULL;
 		char *new_val = NULL;
 		char c;
+		char key[KEY_SIZE] = "";
+		char val[VAL_SIZE] = "";
 
 		for (i=0; (c = line[i]); ++i) {
 			switch (c) {
