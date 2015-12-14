@@ -271,10 +271,10 @@ static void insert_cases(RBMap *tree, Node *node)
 	if (!tree)
 		log_msg("insert_cases: tree is null!");
 
-	while (1) {
-		if (!node)
-			log_msg("insert_case1: node is null!");
 
+	do {
+		if (!node)
+			log_msg("insert_case1: null node!");
 		if (!(parent = node->parent)) {
 			node->color = BLACK;
 			return;
@@ -285,43 +285,41 @@ static void insert_cases(RBMap *tree, Node *node)
 			return;
 
 		/* insert case 3	*/
-		granpa = grandparent(node);
-		if (!granpa)
-			log_msg("insert_case3: granpa is null!");
-
-		uncle = get_uncle(node);
-		if (uncle && RED == uncle->color) {
+		if (!(granpa = grandparent(node)))
+			log_msg("insert_case3: null granpa!");
+		if ((uncle = get_uncle(node)) && RED == uncle->color) {
 			parent->color = BLACK;
 			uncle->color = BLACK;
 			granpa->color = RED;
 			node = granpa;
-			continue;
+		} else {
+			break;
 		}
+	} while (1);
 
-		/* insert case 4	*/
-		if (node == parent->right && parent == granpa->left) {
-			rotate_left(parent);
-			node = parent;
-		} else if (node == parent->left && parent == granpa->right) {
-			rotate_right(parent);
-			node = parent;
-		}
 
-		/* insert case 5	*/
-		if (!(parent = node->parent))
-			log_msg("insert_case5: parent is null!");
-		if (!(granpa = grandparent(node)))
-			log_msg("insert_case5: granpa is null!");
-
-		parent->color = BLACK;
-		granpa->color = RED;
-		(node == parent->left)?rotate_right(granpa):rotate_left(granpa);
-
-		if (!(parent->parent))
-			tree->root = parent;
-
-		return;
+	/* insert case 4	*/
+	if (node == parent->right && parent == granpa->left) {
+		rotate_left(parent);
+		node = parent;
+	} else if (node == parent->left && parent == granpa->right) {
+		rotate_right(parent);
+		node = parent;
 	}
+
+
+	/* insert case 5	*/
+	if (!(parent = node->parent))
+		log_msg("insert_case5: parent is null!");
+	if (!(granpa = grandparent(node)))
+		log_msg("insert_case5: granpa is null!");
+
+	parent->color = BLACK;
+	granpa->color = RED;
+	(node == parent->left)?rotate_right(granpa):rotate_left(granpa);
+
+	if (!(parent->parent))
+		tree->root = parent;
 
 error:
 	return;
@@ -344,33 +342,33 @@ error:
 static Node *search(RBMap *tree, const void *key)
 {
 	int res;
-        Node *curr;
-        CompareFunc cmp_func;
+	Node *curr;
+	CompareFunc cmp_func;
 
 	if (!tree)
 		log_msg("search: tree is null!");
-        if (!(curr = tree->root))
-                return NULL;
-        if (!(cmp_func = tree->cmp_func))
-                log_msg("search: cmp_func is null!");
+	if (!(curr = tree->root))
+		return NULL;
+	if (!(cmp_func = tree->cmp_func))
+		log_msg("search: cmp_func is null!");
 
-        while ((res = cmp_func(key, curr->key))) {
-                if (res < 0) {
-                        if (curr->left)
-                                curr = curr->left;
-                        else
-                                return NULL;
-                } else {
-                        if (curr->right)
-                                curr = curr->right;
-                        else
-                                return NULL;
-                }
-        }
+	while ((res = cmp_func(key, curr->key))) {
+		if (res < 0) {
+			if (curr->left)
+				curr = curr->left;
+			else
+				return NULL;
+		} else {
+			if (curr->right)
+				curr = curr->right;
+			else
+				return NULL;
+		}
+	}
 
-        return curr;
+	return curr;
 error:
-        return NULL;
+	return NULL;
 }
 
 
@@ -399,7 +397,7 @@ static int remove_node(RBMap *tree, Node *node)
 		log_msg("remove_node: tree is null!");
 	if (!node)
 		log_msg("remove_node: node is null!");
-	
+
 	pred = node;
 	if (node->left && node->right) {
 		pred = get_pred(tree, node);
@@ -632,7 +630,6 @@ void rbmap_destroy(RBMap *tree)
 		if (val_dst_func)
 			val_dst_func(curr->value);
 		node_destroy(curr);
-		curr = NULL;
 		curr = stack_pop(stack);
 	} while (curr);
 	
