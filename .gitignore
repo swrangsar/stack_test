@@ -32,4 +32,5 @@
 *.dSYM/
 stack
 rbtree
+rbmap
 *.d
