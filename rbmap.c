@@ -251,7 +251,7 @@ static int insert(RBMap *tree, void *key, void *value)
 			curr->value = value;
 			return 0;
 		}
-	} while (curr);
+	} while (1);
 
 out:
 	insert_cases(tree, new);
@@ -501,8 +501,7 @@ static void remove_cases(RBMap *tree, Node *node)
 	if (!tree)
 		log_msg("remove_cases: tree is null!");
 
-	while (1) {
-		/* remove case 1	*/
+	do {
 		if (!node)
 			log_msg("remove_case1: node is null!");
 		if (!(parent = node->parent))
@@ -527,7 +526,6 @@ static void remove_cases(RBMap *tree, Node *node)
 		}
 
 		/* remove case 3	*/
-		granpa = parent->parent;
 		if (!(sibling = get_sibling(node)))
 			log_msg("remove_case3: sibling is null!");
 
@@ -536,66 +534,67 @@ static void remove_cases(RBMap *tree, Node *node)
 				&& (!sibling->right || BLACK == sibling->right->color)) {
 			sibling->color = RED;
 			node = parent;
-			continue;
-		}
-
-		/* remove case 4	*/
-		if (RED == parent->color && BLACK == sibling->color
-				&& (!sibling->left || BLACK == sibling->left->color)
-				&& (!sibling->right || BLACK == sibling->right->color)) {
-			parent->color = BLACK;
-			sibling->color = RED;
-			return;
-		}
-
-		/* remove case 5	*/
-		if (BLACK != sibling->color)
-			log_msg("remove_case5: sibling is red!");
-
-		if (node == parent->left
-				&& (sibling->left && RED == sibling->left->color)
-				&& (!sibling->right || BLACK == sibling->right->color)) {
-			sibling->color = RED;
-			sibling->left->color = BLACK;
-			rotate_right(sibling);
-		} else if (node == parent->right
-				&& (sibling->right && RED == sibling->right->color)
-				&& (!sibling->left || BLACK == sibling->left->color)) {
-			sibling->color = RED;
-			sibling->right->color = BLACK;
-			rotate_left(sibling);
-		}
-
-		/* remove case 6	*/
-		if (!(parent = node->parent))
-			log_msg("remove_case6: parent is null!");
-		if (!(sibling = get_sibling(node)))
-			log_msg("remove_case6: sibling is null!");
-
-		sibling->color = parent->color;
-		parent->color = BLACK;
-		if (node == parent->left) {
-			rotate_left(parent);
-			if (!sibling->right)
-				log_msg("remove_case6: sibling's child null!");
-			if (RED != sibling->right->color)
-				log_msg("remove_case6: sibling's child not RED!");
-
-			sibling->right->color = BLACK;
 		} else {
-			rotate_right(parent);
-			if (!sibling->left)
-				log_msg("remove_case6: sibling's child null!");
-			if (RED != sibling->left->color)
-				log_msg("remove_case6: sibling's child not RED!");
-
-			sibling->left->color = BLACK;
+			break;
 		}
+	} while (1);
 
-		if (!sibling->parent)
-			tree->root = sibling;
+
+	/* remove case 4	*/
+	if (RED == parent->color && BLACK == sibling->color
+			&& (!sibling->left || BLACK == sibling->left->color)
+			&& (!sibling->right || BLACK == sibling->right->color)) {
+		parent->color = BLACK;
+		sibling->color = RED;
 		return;
 	}
+
+	/* remove case 5	*/
+	if (BLACK != sibling->color)
+		log_msg("remove_case5: sibling is red!");
+
+	if (node == parent->left
+			&& (sibling->left && RED == sibling->left->color)
+			&& (!sibling->right || BLACK == sibling->right->color)) {
+		sibling->color = RED;
+		sibling->left->color = BLACK;
+		rotate_right(sibling);
+	} else if (node == parent->right
+			&& (sibling->right && RED == sibling->right->color)
+			&& (!sibling->left || BLACK == sibling->left->color)) {
+		sibling->color = RED;
+		sibling->right->color = BLACK;
+		rotate_left(sibling);
+	}
+
+	/* remove case 6	*/
+	if (!(parent = node->parent))
+		log_msg("remove_case6: parent is null!");
+	if (!(sibling = get_sibling(node)))
+		log_msg("remove_case6: sibling is null!");
+
+	sibling->color = parent->color;
+	parent->color = BLACK;
+	if (node == parent->left) {
+		rotate_left(parent);
+		if (!sibling->right)
+			log_msg("remove_case6: sibling's child null!");
+		if (RED != sibling->right->color)
+			log_msg("remove_case6: sibling's child not RED!");
+
+		sibling->right->color = BLACK;
+	} else {
+		rotate_right(parent);
+		if (!sibling->left)
+			log_msg("remove_case6: sibling's child null!");
+		if (RED != sibling->left->color)
+			log_msg("remove_case6: sibling's child not RED!");
+
+		sibling->left->color = BLACK;
+	}
+
+	if (!sibling->parent)
+		tree->root = sibling;
 
 error:
 	return;
@@ -612,7 +611,7 @@ void rbmap_destroy(RBMap *tree)
 		return;
 	if (!(curr = tree->root))
 		goto out;
-	
+
 	key_dst_func = tree->key_dst_func;
 	val_dst_func = tree->val_dst_func;
 	stack = stack_new(NULL);
@@ -622,15 +621,14 @@ void rbmap_destroy(RBMap *tree)
 			stack_push(stack, curr->left);
 		if (curr->right)
 			stack_push(stack, curr->right);
-		
+
 		if (key_dst_func)
 			key_dst_func(curr->key);
 		if (val_dst_func)
 			val_dst_func(curr->value);
 		node_destroy(curr);
-		curr = stack_pop(stack);
-	} while (curr);
-	
+	} while ((curr = stack_pop(stack)));
+
 
 	stack_destroy(stack);
 	stack = NULL;
