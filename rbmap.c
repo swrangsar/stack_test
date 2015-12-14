@@ -511,10 +511,10 @@ static void remove_cases(RBMap *tree, Node *node)
 		if (!(sibling = get_sibling(node)))
 			log_msg("remove_case2: sibling is null!");
 
-		granpa = parent->parent;
 		if (RED == sibling->color) {
 			parent->color = RED;
 			sibling->color = BLACK;
+			granpa = parent->parent;
 
 			if (node == parent->left)
 				rotate_left(parent);
@@ -523,13 +523,11 @@ static void remove_cases(RBMap *tree, Node *node)
 
 			if (!granpa)
 				tree->root = sibling;
-		}
+	
+			break;
 
 		/* remove case 3	*/
-		if (!(sibling = get_sibling(node)))
-			log_msg("remove_case3: sibling is null!");
-
-		if (BLACK == parent->color && BLACK == sibling->color
+		} else if (BLACK == parent->color && BLACK == sibling->color
 				&& (!sibling->left || BLACK == sibling->left->color)
 				&& (!sibling->right || BLACK == sibling->right->color)) {
 			sibling->color = RED;
@@ -554,13 +552,11 @@ static void remove_cases(RBMap *tree, Node *node)
 		log_msg("remove_case5: sibling is red!");
 
 	if (node == parent->left
-			&& (sibling->left && RED == sibling->left->color)
 			&& (!sibling->right || BLACK == sibling->right->color)) {
 		sibling->color = RED;
 		sibling->left->color = BLACK;
 		rotate_right(sibling);
 	} else if (node == parent->right
-			&& (sibling->right && RED == sibling->right->color)
 			&& (!sibling->left || BLACK == sibling->left->color)) {
 		sibling->color = RED;
 		sibling->right->color = BLACK;
@@ -568,8 +564,6 @@ static void remove_cases(RBMap *tree, Node *node)
 	}
 
 	/* remove case 6	*/
-	if (!(parent = node->parent))
-		log_msg("remove_case6: parent is null!");
 	if (!(sibling = get_sibling(node)))
 		log_msg("remove_case6: sibling is null!");
 

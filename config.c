@@ -10,7 +10,7 @@
 #define log_msg(M)	{fprintf(stderr, "error: config: " M "\n"); goto error;}
 
 #define KEY_SIZE	512
-#define VAL_SIZE	512
+#define VAL_SIZE	2048
 #define LINE_SIZE	(KEY_SIZE + VAL_SIZE)
 
 
@@ -29,15 +29,17 @@ RBMap *get_conf_map(const char *filename)
 	RBMap *map;
 	FILE *conf_file;
 	char line[LINE_SIZE];
-	
+	char key[KEY_SIZE] = "";
+	char val[VAL_SIZE] = "";
+
 
 	if (!(conf_file = fopen(filename, "r")))
-		log_err("get_config_map: fopen");
+		log_err("get_conf_map: fopen");
 
 	map = rbmap_new(compare, free, free);
 	if (!map) {
 		fclose(conf_file);
-		log_msg("get_config_map: rbmap_new null");
+		log_msg("get_conf_map: rbmap_new null");
 	}
 
 	while (fgets(line, sizeof(line), conf_file)) {
@@ -49,9 +51,8 @@ RBMap *get_conf_map(const char *filename)
 		char *new_key = NULL;
 		char *new_val = NULL;
 		char c;
-		char key[KEY_SIZE] = "";
-		char val[VAL_SIZE] = "";
 
+		key[0] = '\0';
 		for (i=0; (c = line[i]); ++i) {
 			switch (c) {
 				case '\n':
@@ -75,7 +76,7 @@ RBMap *get_conf_map(const char *filename)
 
 		val[(k < VAL_SIZE-1)?k:VAL_SIZE-1] = '\0';
 
-		fprintf(stderr, "get_config_map: key=%s, val=%s\n", key, val);
+		fprintf(stderr, "get_conf_map: key=%s, val=%s\n", key, val);
 	
 		if (!(key_len = strlen(key)))
 			continue;

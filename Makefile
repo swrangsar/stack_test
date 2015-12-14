@@ -8,7 +8,7 @@ SOURCES=$(wildcard *.c)
 OBJS=$(patsubst %.c,%.o,$(SOURCES))
 HEADERS=$(wildcard *.h)
 
-TARGET=rbtree
+TARGET=rbmap
 
 all: $(TARGET) $(HEADERS)
 
