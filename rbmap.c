@@ -207,53 +207,51 @@ static int insert(RBMap *tree, void *key, void *value)
 	CompareFunc cmp_func;
 
 	if (!tree)
-		return -1;
+		log_msg("insert: null tree!");
 
 	if (!(curr = tree->root)) {
-		if (!(new = node_new(key, value)))
+		if ((new = node_new(key, value))) {
+			tree->root = new;
+			goto out;
+		} else {
 			goto error;
-
-		tree->root = new;
-		goto out;
+		}
 	}
 
 	if (!(cmp_func = tree->cmp_func))
 		log_msg("insert: cmp_func is null!");
-		
-	while ((res = cmp_func(key, curr->key))) {
+
+	do {
+		res = cmp_func(key, curr->key);
 		if (res < 0) {
 			if (curr->left) {
 				curr = curr->left;
-			} else {
-				if (!(new = node_new(key, value)))
-					goto error;
-
+			} else if ((new = node_new(key, value))) {
 				curr->left = new;
 				new->parent = curr;
 				goto out;
+			} else {
+				goto error;
 			}
-		} else {
+		} else if (res > 0) {
 			if (curr->right) {
 				curr = curr->right;
-			} else {
-				if (!(new = node_new(key, value)))
-					goto error;
-
+			} else if ((new = node_new(key, value))) {
 				curr->right = new;
 				new->parent = curr;
 				goto out;
+			} else {
+				goto error;
 			}
+		} else {
+			if (key != curr->key && tree->key_dst_func)
+				tree->key_dst_func(key);
+			if (value != curr->value && tree->val_dst_func)
+				tree->val_dst_func(curr->value);
+			curr->value = value;
+			return 0;
 		}
-	}
-
-	if (key != curr->key && tree->key_dst_func)
-		tree->key_dst_func(curr->key);
-	if (value != curr->value && tree->val_dst_func)
-		tree->val_dst_func(curr->value);
-
-	curr->key = key;
-	curr->value = value;
-	return 0;
+	} while (curr);
 
 out:
 	insert_cases(tree, new);
