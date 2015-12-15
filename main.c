@@ -4,6 +4,7 @@
 
 #include "rbmap.h"
 
+static int show_key_val(void *, void *, void *);
 
 
 int main(const int argc, const char **argv)
@@ -29,8 +30,18 @@ int main(const int argc, const char **argv)
 	if ((found = (char *)rbmap_search(conf_map, (const void *)"server_port")))
 		printf("main: found server_port: %s\n", found);
 
+	rbmap_foreach(conf_map, show_key_val, NULL);
+
 	rbmap_destroy(conf_map);
 	conf_map = NULL;
 	
+	return 0;
+}
+
+
+static int show_key_val(void *key, void *val, void *data)
+{
+	printf("show_key_val: key=%s, val=%s\n", (const char *)key, (const char *)val);
+
 	return 0;
 }

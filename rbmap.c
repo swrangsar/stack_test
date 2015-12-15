@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <errno.h>
 
+#include "stack.h"
 
 #define log_err(M)	{perror("error: RBMap: " M); goto error;}
 #define log_msg(M)	{fprintf(stderr, "error: RBMap: " M "\n"); goto error;}
@@ -51,6 +52,8 @@ static Node *get_pred(RBMap*, Node*);
 static int remove_child(RBMap*, Node*);
 static void replace_with_child(RBMap*, Node*, Node*);
 static void remove_cases(RBMap*, Node*);
+
+static void inorder(RBMap *, TraverseFunc, void *);
 
 static void rbmap_clear(RBMap *tree);
 
@@ -589,6 +592,47 @@ static void remove_cases(RBMap *tree, Node *node)
 
 	if (!sibling->parent)
 		tree->root = sibling;
+
+error:
+	return;
+}
+
+void rbmap_foreach(RBMap *tree, TraverseFunc trav_func, void *data)
+{
+	inorder(tree, trav_func, data);
+}
+
+static void inorder(RBMap *tree, TraverseFunc trav_func, void *data)
+{
+	Node *curr;
+	Stack *stack;
+	
+
+	if (!tree)
+		log_msg("inorder: null tree!");
+	if (!(curr = tree->root))
+		return;
+	if (!trav_func)
+		log_msg("inorder: null traverse func!");
+
+	if (!(stack = stack_new(NULL)))
+		log_msg("inorder: null stack!");
+
+	while (!stack_is_empty(stack) || curr) {
+		if (curr) {
+			stack_push(stack, curr);
+			curr = curr->left;
+		} else {
+			curr = stack_pop(stack);
+			if (trav_func(curr->key, curr->value, data))
+				break;
+
+			curr = curr->right;
+		}
+	}
+
+	stack_destroy(stack);
+	stack = NULL;
 
 error:
 	return;
