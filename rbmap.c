@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <errno.h>
 
-#include "stack.h"
 
 #define log_err(M)	{perror("error: RBMap: " M); goto error;}
 #define log_msg(M)	{fprintf(stderr, "error: RBMap: " M "\n"); goto error;}
@@ -605,34 +604,34 @@ void rbmap_foreach(RBMap *tree, TraverseFunc trav_func, void *data)
 static void inorder(RBMap *tree, TraverseFunc trav_func, void *data)
 {
 	Node *curr;
-	Stack *stack;
-	
+	Node *prev;
+	Node *next;
 
 	if (!tree)
 		log_msg("inorder: null tree!");
-	if (!(curr = tree->root))
-		return;
-	if (!trav_func)
-		log_msg("inorder: null traverse func!");
-
-	if (!(stack = stack_new(NULL)))
-		log_msg("inorder: null stack!");
-
-	while (!stack_is_empty(stack) || curr) {
-		if (curr) {
-			stack_push(stack, curr);
-			curr = curr->left;
-		} else {
-			curr = stack_pop(stack);
+		
+	prev = NULL;
+	curr = tree->root;
+	
+	while (curr) {
+		if (prev == curr->parent) {
+			if (!(next = curr->left)) {
+				if (trav_func(curr->key, curr->value, data))
+					break;
+				next = curr->right?curr->right:curr->parent;
+			}
+		} else if (prev == curr->left) {
 			if (trav_func(curr->key, curr->value, data))
 				break;
-
-			curr = curr->right;
+			next = curr->right?curr->right:curr->parent;
+		} else if (prev == curr->right) {
+			next = curr->parent;
+		} else {
+			log_msg("inorder: curr is not l, r or p!");
 		}
+		prev = curr;
+		curr = next;
 	}
-
-	stack_destroy(stack);
-	stack = NULL;
 
 error:
 	return;
