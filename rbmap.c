@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <errno.h>
 
-#include "stack.h"
 
 #define log_err(M)	{perror("error: RBMap: " M); goto error;}
 #define log_msg(M)	{fprintf(stderr, "error: RBMap: " M "\n"); goto error;}
@@ -53,6 +52,7 @@ static int remove_child(RBMap*, Node*);
 static void replace_with_child(RBMap*, Node*, Node*);
 static void remove_cases(RBMap*, Node*);
 
+static void rbmap_clear(RBMap *tree);
 
 
 
@@ -594,12 +594,12 @@ error:
 	return;
 }
 
-void rbmap_destroy(RBMap *tree)
+static void rbmap_clear(RBMap *tree)
 {
 	Node *curr;
+	Node *parent;
 	DestroyFunc key_dst_func;
 	DestroyFunc val_dst_func;
-	Stack *stack;
 
 	if (!tree)
 		return;
@@ -608,27 +608,37 @@ void rbmap_destroy(RBMap *tree)
 
 	key_dst_func = tree->key_dst_func;
 	val_dst_func = tree->val_dst_func;
-	stack = stack_new(NULL);
 
 	do {
-		if (curr->left)
-			stack_push(stack, curr->left);
-		if (curr->right)
-			stack_push(stack, curr->right);
+		if (curr->left) {
+			curr = curr->left;
+		} else if (curr->right) {
+			curr = curr->right;
+		} else {
+			if ((parent = curr->parent)) {
+				if (curr == parent->left)
+					parent->left = NULL;
+				else
+					parent->right = NULL;
+			} else {
+				tree->root = NULL;
+			}
 
-		if (key_dst_func)
-			key_dst_func(curr->key);
-		if (val_dst_func)
-			val_dst_func(curr->value);
-		node_destroy(curr);
-	} while ((curr = stack_pop(stack)));
+			if (key_dst_func)
+				key_dst_func(curr->key);
+			if (val_dst_func)
+				val_dst_func(curr->value);
+			node_destroy(curr);
+			curr = parent;
+		}
+	} while (curr);
 
-
-	stack_destroy(stack);
-	stack = NULL;
-
-	tree->root = NULL;
 out:
 	free(tree);
 	tree = NULL;
+}
+
+void rbmap_destroy(RBMap *tree)
+{
+	rbmap_clear(tree);
 }
