@@ -54,8 +54,6 @@ static void remove_cases(RBMap*, Node*);
 
 static void inorder(RBMap *, TraverseFunc, void *);
 
-static void rbmap_clear(RBMap *tree);
-
 
 
 static Node *node_new(void *key, void *value)
@@ -637,7 +635,7 @@ error:
 	return;
 }
 
-static void rbmap_clear(RBMap *tree)
+void rbmap_clear(RBMap *tree)
 {
 	Node *curr;
 	Node *parent;
@@ -645,9 +643,10 @@ static void rbmap_clear(RBMap *tree)
 	DestroyFunc val_dst_func;
 
 	if (!tree)
-		return;
+		log_msg("rbmap_clear: null tree!");
+
 	if (!(curr = tree->root))
-		goto out;
+		return;
 
 	key_dst_func = tree->key_dst_func;
 	val_dst_func = tree->val_dst_func;
@@ -676,12 +675,15 @@ static void rbmap_clear(RBMap *tree)
 		}
 	} while (curr);
 
-out:
-	free(tree);
-	tree = NULL;
+error:
+	return;
 }
 
 void rbmap_destroy(RBMap *tree)
 {
+	if (!tree)
+		return;
+
 	rbmap_clear(tree);
+	free(tree);
 }

@@ -11,6 +11,7 @@ int rbmap_insert(RBMap *, void *, void *);
 void *rbmap_search(RBMap *, const void *);
 void rbmap_foreach(RBMap *, TraverseFunc, void *);
 int rbmap_remove(RBMap *, const void *);
+void rbmap_clear(RBMap *);
 void rbmap_destroy(RBMap *);
 
 #endif
