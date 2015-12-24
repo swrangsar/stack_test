@@ -1,60 +1,47 @@
+#include <config.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
-#include <queue.h>
+#include <rbmap.h>
 
-#define log_err(M)	{perror("error: tester: " M); goto error;}
-#define LINE_SIZE	4096
+static int show_key_val(void *, void *, void *);
 
 
 int main(const int argc, const char **argv)
 {
-	char line[LINE_SIZE];
-	Queue *queue = NULL;
-	FILE *conf_file = fopen("test.ini", "r");
-	int ret = 0;
+	RBMap *conf_map;
+	char *found;
+
+	conf_map = get_conf_map("test.ini");
+	if (!conf_map)
+		return -1;
+
+	found = (char *)rbmap_search(conf_map, (const void *)"logs_path");
+	if (found)
+		printf("main: Yay!... found: %s\n", found);
 	
-	if (!(conf_file))
-		log_err("fopen conf_file");
+	rbmap_remove(conf_map, (const void *)"logs_path");
+	
+	if ((found = (char *)rbmap_search(conf_map, (const void *)"logs_path")))
+		printf("main: error: Huh!... found again: %s\n", found);
+	
+	if ((found = (char *)rbmap_search(conf_map, (const void *)"ip_address")))
+		printf("main: found IP: %s\n", found);
+	if ((found = (char *)rbmap_search(conf_map, (const void *)"server_port")))
+		printf("main: found server_port: %s\n", found);
 
-	if (!(queue = queue_new(free)))
-		goto error;
+	rbmap_foreach(conf_map, show_key_val, NULL);
 
-	while (fgets(line, sizeof(line), conf_file)) {
-		size_t len;
-		char *new_str;
-		
-		if (!(len = strlen(line)))
-			continue;
-		if (!(new_str = malloc(sizeof(*new_str) * (1+len))))
-			continue;
-		strcpy(new_str, line);
-
-		if (-1 == enqueue(queue, (void *)new_str))
-			free(new_str);
-	}
-
-	while (!queue_is_empty(queue)) {
-		char *data = (char *)dequeue(queue);
-		
-		if (!data)
-			continue;
-		
-		fprintf(stderr, "dequeue: %s\n", data);
-		free(data);
-		data = NULL;
-	}
+	rbmap_destroy(conf_map);
+	conf_map = NULL;
+	
+	return 0;
+}
 
 
-out:
-	if (conf_file)
-		fclose(conf_file);
-	if (queue)
-		queue_destroy(queue);
-	queue=NULL;
-	return ret;
-error:
-	ret = -1;
-	goto out;
+static int show_key_val(void *key, void *val, void *data)
+{
+	printf("show_key_val: key=%s, val=%s\n", (const char *)key, (const char *)val);
+
+	return 0;
 }

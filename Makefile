@@ -1,4 +1,5 @@
-CC := gcc
+CC := gcc-5
+#CC := gcc
 CFLAGS := -O2 -Wall -g -ansi -pedantic $(OPTFLAGS)
 CFLAGS+= -MMD
 
