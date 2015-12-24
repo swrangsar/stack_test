@@ -21,7 +21,7 @@ struct _Node {
 
 struct _Queue {
 	Node *head;
-	Node *tail:
+	Node *tail;
 	DestroyFunc destroy_func;
 };
 

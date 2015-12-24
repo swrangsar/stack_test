@@ -5,7 +5,7 @@
 
 typedef struct _Queue Queue;
 
-Queue queue_new(DestroyFunc);
+Queue *queue_new(DestroyFunc);
 int enqueue(Queue *, void *);
 int queue_is_empty(Queue *);
 void *dequeue(Queue *);

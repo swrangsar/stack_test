@@ -37,4 +37,5 @@ rbmap
 lib/*
 bin/*
 .DS_Store
+*.bak
 

@@ -7,12 +7,10 @@ BUILDDIR := build
 TARGET := bin/rbmap
 
 SOURCES := $(shell find $(SRCDIR) -type f -name *.c)
-OBJECTS := $(patsubst $(SRCDIR)/%,$(BUILDDIR)/%,%.c,$(SOURCES:.c=.o))
+OBJECTS := $(patsubst $(SRCDIR)/%,$(BUILDDIR)/%,$(SOURCES:.c=.o))
 LIB := -Llib
 INC := -Iinclude
 
-
-all: $(TARGET)
 
 $(TARGET): $(OBJECTS)
 	$(CC) $^ -o $@ $(LIB)
@@ -23,13 +21,12 @@ $(BUILDDIR)/%.o: $(SRCDIR)/%.c
 %.o: %.c
 	$(CC) $(CFLAGS) $<
 
-
 clean:
-	rm -r $(BUILDDIR) $(TARGET) 
+	rm -r $(BUILDDIR) $(TARGET)
+
+tester:
+	$(CC) $(CFLAGS) test/tester.c $(INC) $(LIB) -o bin/tester
 
 .PHONY: clean
-
-test:
-	$(CC) $(CFLAGS) test/test.c $(INC) $(LIB) -o bin/test
 
 -include $(OBJECTS:%.o=%.d)
