@@ -1,0 +1,25 @@
+CC=gcc
+CFLAGS= -O2 -Wall -g -ansi -pedantic -c $(OPTFLAGS)
+CFLAGS+= -MMD
+LFLAGS= -O2 -Wall -g -ansi -pedantic
+
+
+SOURCES=$(wildcard *.c)
+OBJS=$(patsubst %.c,%.o,$(SOURCES))
+HEADERS=$(wildcard *.h)
+
+TARGET=rbmap
+
+all: $(TARGET) $(HEADERS)
+
+$(TARGET): $(OBJS)
+	$(CC) $(LFLAGS) $(OBJS) -o $@
+
+%.o: %.c
+	$(CC) $(CFLAGS) $<
+
+
+clean:
+	rm -f $(TARGET) *.o *.d
+
+-include $(OBJS:%.o=%.d)

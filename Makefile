@@ -1,25 +1,35 @@
-CC=gcc
-CFLAGS= -O2 -Wall -g -ansi -pedantic -c $(OPTFLAGS)
+CC := gcc
+CFLAGS := -O2 -Wall -g -ansi -pedantic $(OPTFLAGS)
 CFLAGS+= -MMD
-LFLAGS= -O2 -Wall -g -ansi -pedantic
+
+SRCDIR := src
+BUILDDIR := build
+TARGET := bin/rbmap
+
+SOURCES := $(shell find $(SRCDIR) -type f -name *.c)
+OBJECTS := $(patsubst $(SRCDIR)/%,$(BUILDDIR)/%,%.c,$(SOURCES:.c=.o))
+LIB := -Llib
+INC := -Iinclude
 
 
-SOURCES=$(wildcard *.c)
-OBJS=$(patsubst %.c,%.o,$(SOURCES))
-HEADERS=$(wildcard *.h)
+all: $(TARGET)
 
-TARGET=rbmap
+$(TARGET): $(OBJECTS)
+	$(CC) $^ -o $@ $(LIB)
 
-all: $(TARGET) $(HEADERS)
-
-$(TARGET): $(OBJS)
-	$(CC) $(LFLAGS) $(OBJS) -o $@
-
+$(BUILDDIR)/%.o: $(SRCDIR)/%.c
+	@mkdir -p $(BUILDDIR)
+	$(CC) $(CFLAGS) $(INC) -c -o $@ $<
 %.o: %.c
 	$(CC) $(CFLAGS) $<
 
 
 clean:
-	rm -f $(TARGET) *.o *.d
+	rm -r $(BUILDDIR) $(TARGET) 
 
--include $(OBJS:%.o=%.d)
+.PHONY: clean
+
+test:
+	$(CC) $(CFLAGS) test/test.c $(INC) $(LIB) -o bin/test
+
+-include $(OBJECTS:%.o=%.d)

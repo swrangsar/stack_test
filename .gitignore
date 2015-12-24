@@ -34,3 +34,7 @@ stack
 rbtree
 rbmap
 *.d
+lib/*
+bin/*
+.DS_Store
+
