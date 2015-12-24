@@ -5,8 +5,8 @@
 #include <errno.h>
 
 
-#define log_err(M)	{perror("error: " M); goto error;}
-#define log_msg(M)	{fprintf(stderr, "error: " M "\n"); goto error;}
+#define log_err(M)	{perror("error: stack: " M); goto error;}
+#define log_msg(M)	{fprintf(stderr, "error: stack: " M "\n"); goto error;}
 
 typedef struct _Node Node;
 
@@ -113,6 +113,5 @@ void stack_destroy(Stack* stack)
 		return;
 
 	stack_clear(stack);
-
 	free(stack);
 }
