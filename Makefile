@@ -19,8 +19,6 @@ $(TARGET): $(OBJECTS)
 $(BUILDDIR)/%.o: $(SRCDIR)/%.c
 	@mkdir -p $(BUILDDIR)
 	$(CC) $(CFLAGS) $(INC) -c -o $@ $<
-%.o: %.c
-	$(CC) $(CFLAGS) $<
 
 clean:
 	rm -r $(BUILDDIR) $(TARGET)
