@@ -4,16 +4,17 @@ CFLAGS+= -MMD
 
 SRCDIR := src
 BUILDDIR := build
-TARGET := bin/rbmap
+TARGET := lib/librbmap.a
 
 SOURCES := $(shell find $(SRCDIR) -type f -name *.c)
 OBJECTS := $(patsubst $(SRCDIR)/%,$(BUILDDIR)/%,$(SOURCES:.c=.o))
-LIB := -Llib
+LIB := -Llib -lrbmap
 INC := -Iinclude
 
 
 $(TARGET): $(OBJECTS)
-	$(CC) $^ -o $@ $(LIB)
+	ar rcs $@ $(OBJECTS)
+	ranlib $@
 
 $(BUILDDIR)/%.o: $(SRCDIR)/%.c
 	@mkdir -p $(BUILDDIR)

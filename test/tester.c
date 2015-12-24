@@ -1,8 +1,8 @@
-#include "config.h"
+#include <config.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "rbmap.h"
+#include <rbmap.h>
 
 static int show_key_val(void *, void *, void *);
 
