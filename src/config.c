@@ -36,8 +36,7 @@ RBMap *get_conf_map(const char *filename)
 	if (!(conf_file = fopen(filename, "r")))
 		log_err("get_conf_map: fopen");
 
-	map = rbmap_new(compare, free, free);
-	if (!map) {
+	if (!(map = rbmap_new(compare, free, free))) {
 		fclose(conf_file);
 		log_msg("get_conf_map: rbmap_new null");
 	}
@@ -104,10 +103,10 @@ RBMap *get_conf_map(const char *filename)
 			new_val = NULL;
 		}
 	}
+
 	
 	fclose(conf_file);
 	return map;
-
 error:
 	return NULL;
 }

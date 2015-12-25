@@ -8,11 +8,8 @@
 #define log_err(M)	{perror("error: stack: " M); goto error;}
 #define log_msg(M)	{fprintf(stderr, "error: stack: " M "\n"); goto error;}
 
+
 typedef struct _Node Node;
-
-static void stack_clear(Stack *stack);
-
-
 
 struct _Node {
 	Node *next;
@@ -23,6 +20,9 @@ struct _Stack {
 	Node *head;
 	DestroyFunc destroy_func;
 };
+
+
+static void stack_clear(Stack *stack);
 
 
 Stack *stack_new(DestroyFunc destroy_func)
@@ -64,7 +64,6 @@ int stack_is_empty(Stack *stack)
 		log_msg("stack_is_empty: null stack!");
 
 	return !stack->head;
-	
 error:
 	return 1;
 }
@@ -76,14 +75,12 @@ void *stack_pop(Stack *stack)
 
 	if (!stack)
 		log_msg("stack_pop: null stack!");
-	
 	if (!(node = stack->head))
 		return NULL;
 
 	data = node->data;
 	stack->head = node->next;
 	free(node);
-	
 	return data;
 error:
 	return NULL;
@@ -91,16 +88,12 @@ error:
 
 static void stack_clear(Stack *stack)
 {
-	void *data;
-	DestroyFunc destroy_func;
-
 	if (!stack)
 		return;
-	destroy_func = stack->destroy_func;
 	
-	if (destroy_func) {
+	if (stack->destroy_func) {
 		while (!stack_is_empty(stack))
-			destroy_func(data = stack_pop(stack));
+			stack->destroy_func(stack_pop(stack));
 	} else {
 		while (!stack_is_empty(stack))
 			stack_pop(stack);

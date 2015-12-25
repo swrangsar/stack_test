@@ -50,11 +50,14 @@ int enqueue(Queue *queue, void *data)
 		log_err("enqueue: malloc node");
 
 	node->data = data;
-	node->next = queue->head;
-	queue->head = node;
-	
-	if (!node->next)
+	node->next = NULL;
+	if (queue->tail) {
+		queue->tail->next = node;
 		queue->tail = node;
+	} else {
+		queue->tail = node;
+		queue->head = node;
+	}
 	
 	return 0;
 error:
@@ -94,14 +97,12 @@ error:
 
 static void queue_clear(Queue *queue)
 {
-	void *data;
-
 	if (!queue)
 		return;
 
 	if (queue->destroy_func) {
 		while (!queue_is_empty(queue))
-			queue->destroy_func(data = dequeue(queue));
+			queue->destroy_func(dequeue(queue));
 	} else {
 		while (!queue_is_empty(queue))
 			dequeue(queue);
