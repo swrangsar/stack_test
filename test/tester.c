@@ -49,17 +49,17 @@ int main(const int argc, const char **argv)
 	if (-1 == rbset_insert(conf_set, (void *)new_str))
 		log_msg("insert: bin_path!");
 
-	if (rbset_search(conf_set, (const void *)"logs_path"))
+	if (!rbset_search(conf_set, (const void *)"logs_path"))
 		printf("main: Yay!... found logs_path\n");
 	
 	rbset_remove(conf_set, (const void *)"logs_path");
 	
-	if (rbset_search(conf_set, (const void *)"logs_path"))
+	if (!rbset_search(conf_set, (const void *)"logs_path"))
 		printf("main: error: Huh!... found again: logs_path\n");
 	
-	if (rbset_search(conf_set, (const void *)"ip_address"))
+	if (!rbset_search(conf_set, (const void *)"ip_address"))
 		printf("main: found ip_address\n");
-	if (rbset_search(conf_set, (const void *)"server_port"))
+	if (!rbset_search(conf_set, (const void *)"server_port"))
 		printf("main: found server_port\n");
 
 	rbset_foreach(conf_set, show_key, NULL);

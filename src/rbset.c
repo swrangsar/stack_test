@@ -319,9 +319,9 @@ int rbset_search(RBSet *tree, const void *key)
 	if (!tree)
 		log_msg("rbset_search: tree is null!");
 
-	return search(tree, key)?1:0;
+	return search(tree, key)?0:-1;
 error:
-	return 0;
+	return -1;
 }
 
 static Node *search(RBSet *tree, const void *key)
