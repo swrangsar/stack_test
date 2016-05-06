@@ -27,6 +27,6 @@ clean:
 tester:
 	$(CC) $(CFLAGS) test/tester.c $(INC) $(LIB) -o bin/tester
 
-.PHONY: clean
+.PHONY: clean tester
 
 -include $(OBJECTS:%.o=%.d)
