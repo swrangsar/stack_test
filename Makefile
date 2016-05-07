@@ -3,17 +3,17 @@ SHELL = /bin/sh
 CC = cc
 RANLIB = ranlib
 
-CFLAGS := -O2 -Wall -g -ansi -pedantic $(OPTFLAGS)
+CFLAGS = -O2 -Wall -g -ansi -pedantic $(OPTFLAGS)
 CFLAGS+= -MMD
 
 srcdir = src
-BUILDDIR := build
-TARGET := lib/librbmap.a
+BUILDDIR = build
+TARGET = lib/librbmap.a
 
-SOURCES := $(shell find $(srcdir) -type f -name *.c)
-OBJECTS := $(patsubst $(srcdir)/%,$(BUILDDIR)/%,$(SOURCES:.c=.o))
-LIB := -Llib -lrbmap
-INC := -Iinclude
+SOURCES = $(shell find $(srcdir) -type f -name *.c)
+OBJECTS = $(patsubst $(srcdir)/%,$(BUILDDIR)/%,$(SOURCES:.c=.o))
+LIB = -Llib -lrbmap
+INC = -Iinclude
 
 .PHONY: all
 all: $(TARGET)
