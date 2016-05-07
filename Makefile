@@ -29,7 +29,7 @@ $(BUILDDIR)/%.o: $(srcdir)/%.c
 
 .PHONY: clean
 clean:
-	rm -r $(BUILDDIR) $(TARGET)
+	-rm -r $(BUILDDIR) $(TARGET)
 
 .PHONY: tester
 tester:
