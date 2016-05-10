@@ -11,8 +11,10 @@ srcdir = src
 BUILDDIR = build
 TARGET = lib/librbmap.a
 
+
 SRCS = $(shell find $(srcdir) -type f -name *.c)
 OBJS = $(patsubst $(srcdir)/%.c,$(BUILDDIR)/%.o,$(SRCS))
+AUX = $(srcdir) Makefile include test
 LDLIBS = -Llib
 LDFLAGS = -lrbmap
 INC = -Iinclude
@@ -32,11 +34,14 @@ $(BUILDDIR)/%.o: $(srcdir)/%.c
 
 .PHONY: clean
 clean:
-	-rm -f $(BUILDDIR)/* $(TARGET)
+	-rm -f $(BUILDDIR)/* $(TARGET) *.tgz
 
 .PHONY: tester
 tester:
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) test/tester.c $(INC) $(LDLIBS) -o bin/tester
 
+.PHONY: dist
+dist:
+	tar -zcvf rbmap.tgz $(AUX)
 
 -include $(OBJS:%.o=%.d)
