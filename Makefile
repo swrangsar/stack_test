@@ -2,6 +2,7 @@ SHELL = /bin/sh
 
 CC = cc
 RANLIB = ranlib
+ARFLAGS = rcs
 
 CFLAGS = -O2 -Wall -g -ansi -pedantic $(OPTFLAGS)
 CFLAGS += -MMD
@@ -10,8 +11,8 @@ srcdir = src
 BUILDDIR = build
 TARGET = lib/librbmap.a
 
-SOURCES = $(shell find $(srcdir) -type f -name *.c)
-OBJECTS = $(patsubst $(srcdir)/%.c,$(BUILDDIR)/%.o,$(SOURCES))
+SRCS = $(shell find $(srcdir) -type f -name *.c)
+OBJS = $(patsubst $(srcdir)/%.c,$(BUILDDIR)/%.o,$(SRCS))
 LDLIBS = -Llib
 LDFLAGS = -lrbmap
 INC = -Iinclude
@@ -20,9 +21,9 @@ INC = -Iinclude
 all: $(TARGET)
 
 
-$(TARGET): $(OBJECTS)
+$(TARGET): $(OBJS)
 	@if test ! -d lib; then mkdir lib; fi
-	$(AR) rcs $@ $(OBJECTS)
+	$(AR) $(ARFLAGS) $@ $(OBJS)
 	$(RANLIB) $@
 
 $(BUILDDIR)/%.o: $(srcdir)/%.c
@@ -31,11 +32,11 @@ $(BUILDDIR)/%.o: $(srcdir)/%.c
 
 .PHONY: clean
 clean:
-	-rm -r $(BUILDDIR) $(TARGET)
+	-rm -f $(BUILDDIR)/* $(TARGET)
 
 .PHONY: tester
 tester:
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) test/tester.c $(INC) $(LDLIBS) -o bin/tester
 
 
--include $(OBJECTS:%.o=%.d)
+-include $(OBJS:%.o=%.d)
