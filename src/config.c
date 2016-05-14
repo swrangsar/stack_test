@@ -30,9 +30,9 @@ static int compare(const void *a, const void *b)
 
 RBMap *get_conf_map(const char *filename)
 {
+	char line[LINE_SIZE];
 	RBMap *map = NULL;
 	FILE *conf_file = NULL;
-	char line[LINE_SIZE];
 
 	if (!(conf_file = fopen(filename, "r")))
 		log_err("get_conf_map: fopen");
@@ -51,42 +51,49 @@ error:
 
 static void process_line(const char *line, RBMap *map)
 {
-	char key[KEY_SIZE] = "";
-	char val[VAL_SIZE] = "";
+	char key[KEY_SIZE];
+	char val[VAL_SIZE];
+	int got_eol;
+	int k;
+	int i;
+	int key_read = 0;
 	size_t key_len;
 	size_t val_len;
-	int key_read = 0;
+	const char *c;
 	char *new_key = NULL;
 	char *new_val = NULL;
-	char c;
-	int i;
-	int k;
 
+	if (!line)
+		return;
 	if (!map)
 		return;
 
-	for (i=0, k=0; (c = line[i]); ++i) {
-		switch (c) {
+	got_eol = 0;
+	k = 0;
+	i = 0;
+	for (c = line; !got_eol ; ++c) {
+		switch (*c) {
+			case '\0':
+			case '#':
 			case '\n':
+				got_eol = 1;
 				break;
 
 			case '=':
-				key[(k < KEY_SIZE - 1)?k:KEY_SIZE-1] = '\0';
 				key_read = 1;
-				k = 0;
 				break;
 
 			default:
 				if (!key_read && k < KEY_SIZE-1)
-					key[k++] = c;
-				else if (key_read && k < VAL_SIZE-1)
-					val[k++] = c;
-
+					key[k++] = *c;
+				else if (key_read && i < VAL_SIZE-1)
+					val[i++] = *c;
 				break;
 		}
 	}
 
-	val[(k < VAL_SIZE-1)?k:VAL_SIZE-1] = '\0';
+	key[(k < KEY_SIZE - 1)?k:KEY_SIZE-1] = '\0';
+	val[(i < VAL_SIZE-1)?i:VAL_SIZE-1] = '\0';
 
 
 	if (!(key_len = strlen(key)))

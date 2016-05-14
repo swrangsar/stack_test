@@ -15,8 +15,8 @@ TARGET = lib/librbmap.a
 SRCS = $(wildcard $(srcdir)/*.c)
 OBJS = $(patsubst $(srcdir)/%.c,$(BUILDDIR)/%.o,$(SRCS))
 AUX = $(srcdir) Makefile include test
-LDLIBS = -Llib
-LDFLAGS = -lrbmap
+LDFLAGS = -Llib
+LDLIBS = -lrbmap
 INC = -Iinclude
 
 .PHONY: all
@@ -38,7 +38,7 @@ clean:
 
 .PHONY: tester
 tester:
-	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) test/tester.c $(INC) $(LDLIBS) -o bin/tester
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) test/tester.c $(INC) $(LDLIBS) -o tester
 
 .PHONY: dist
 dist:
