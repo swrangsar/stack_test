@@ -12,7 +12,7 @@ BUILDDIR = build
 TARGET = lib/librbmap.a
 
 
-SRCS = $(shell find $(srcdir) -type f -name *.c)
+SRCS = $(wildcard $(srcdir)/*.c)
 OBJS = $(patsubst $(srcdir)/%.c,$(BUILDDIR)/%.o,$(SRCS))
 AUX = $(srcdir) Makefile include test
 LDLIBS = -Llib
