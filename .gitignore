@@ -38,5 +38,5 @@ lib/*
 bin/*
 .DS_Store
 *.bak
-
 *.tgz
+build/*

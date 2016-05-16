@@ -38,7 +38,8 @@ clean:
 
 .PHONY: tester
 tester:
-	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) test/tester.c $(INC) $(LDLIBS) -o tester
+	@if test ! -d bin; then mkdir bin; fi
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) test/tester.c $(INC) $(LDLIBS) -o bin/tester
 
 .PHONY: dist
 dist:
