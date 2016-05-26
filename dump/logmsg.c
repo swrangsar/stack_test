@@ -5,13 +5,18 @@
 #include <string.h>
 
 
-static const char prognm[] = "tlogger";
+static const char prognm[] = "rtmon_tail";
+
+#ifdef __DEBUG__
 static unsigned int verbosity = LOG_LEVEL_DBG;
+#else
+static unsigned int verbosity = LOG_LEVEL_INFO;
+#endif
 
 
 extern int strerror_r(int errnum, char *buf, size_t buflen);
 
-void log_msg(unsigned int level, const char *file, int linenum, const char *fmt, ...)
+void log_msg(unsigned int level, const char *file, int linenum, const char *func, const char *fmt, ...)
 {
 	if (level < LOG_LEVEL_CRIT)
 		level = LOG_LEVEL_CRIT;
@@ -30,7 +35,7 @@ void log_msg(unsigned int level, const char *file, int linenum, const char *fmt,
 		int errsv = errno;
 		va_list ap;
 
-		fprintf(stderr, "%s: %s %s:%d: ", prognm, levels[level], file, linenum);
+		fprintf(stderr, "%s: %s %s:%d:(%s) ", prognm, levels[level], file, linenum, func);
 		va_start(ap, fmt);
 		vfprintf(stderr, fmt, ap);
 		va_end(ap);
