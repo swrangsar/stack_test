@@ -4,8 +4,8 @@ CC = cc
 RANLIB = ranlib
 ARFLAGS = rcs
 
-CFLAGS = -O2 -Wall -g -ansi -pedantic $(OPTFLAGS)
-CFLAGS += -MMD
+CFLAGS = -g -ansi -pedantic
+ALL_CFLAGS = -Wall -O2 $(CFLAGS)
 
 srcdir = src
 BUILDDIR = build
@@ -17,7 +17,8 @@ OBJS = $(patsubst $(srcdir)/%.c,$(BUILDDIR)/%.o,$(SRCS))
 AUX = $(srcdir) Makefile include test
 LDFLAGS = -Llib
 LDLIBS = -lrbmap
-INC = -Iinclude
+CPPFLAGS = -MMD -Iinclude
+
 
 .PHONY: all
 all: $(TARGET)
@@ -30,19 +31,19 @@ $(TARGET): $(OBJS)
 
 $(BUILDDIR)/%.o: $(srcdir)/%.c
 	@if test ! -d $(BUILDDIR); then mkdir $(BUILDDIR); fi
-	$(CC) -c $(CPPFLAGS) $(CFLAGS) $(INC) -o $@ $<
+	$(CC) -c $(CPPFLAGS) $(CFLAGS) -o $@ $<
 
 .PHONY: clean
 clean:
-	-rm -f $(BUILDDIR)/* $(TARGET) *.tgz
+	-$(RM) $(BUILDDIR)/* $(TARGET) *.tgz
 
 .PHONY: tester
 tester:
 	@if test ! -d bin; then mkdir bin; fi
-	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) test/tester.c $(INC) $(LDLIBS) -o bin/tester
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) test/tester.c $(LDLIBS) -o bin/tester
 
 .PHONY: dist
 dist:
 	tar -zcvf rbmap.tgz $(AUX)
 
--include $(OBJS:%.o=%.d)
+-include $(patsubst %.o,%.d,$(OBJS))
