@@ -31,7 +31,7 @@ $(TARGET): $(OBJS)
 
 $(BUILDDIR)/%.o: $(srcdir)/%.c
 	@if test ! -d $(BUILDDIR); then mkdir $(BUILDDIR); fi
-	$(CC) -c $(CPPFLAGS) $(CFLAGS) -o $@ $<
+	$(CC) -c $(CPPFLAGS) $(ALL_CFLAGS) -o $@ $<
 
 .PHONY: clean
 clean:
@@ -40,7 +40,7 @@ clean:
 .PHONY: tester
 tester:
 	@if test ! -d bin; then mkdir bin; fi
-	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) test/tester.c $(LDLIBS) -o bin/tester
+	$(CC) $(CPPFLAGS) $(ALL_CFLAGS) $(LDFLAGS) test/tester.c $(LDLIBS) -o bin/tester
 
 .PHONY: dist
 dist:
