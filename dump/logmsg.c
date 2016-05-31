@@ -7,10 +7,10 @@
 
 static const char prognm[] = "rtmon_tail";
 
-#ifdef __DEBUG__
-static unsigned int verbosity = LOG_LEVEL_DBG;
-#else
+#ifdef NDEBUG
 static unsigned int verbosity = LOG_LEVEL_INFO;
+#else
+static unsigned int verbosity = LOG_LEVEL_DBG;
 #endif
 
 
