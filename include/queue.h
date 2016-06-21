@@ -1,9 +1,9 @@
-#ifndef _QUEUE_H_
-#define _QUEUE_H_
+#ifndef QUEUE_H
+#define QUEUE_H
 
 #include "types.h"
 
-typedef struct _Queue Queue;
+typedef struct Queue_ Queue;
 
 Queue *queue_new(DestroyFunc);
 int enqueue(Queue *, void *);

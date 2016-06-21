@@ -9,14 +9,14 @@
 #define log_msg(M)	{fprintf(stderr, "error: stack: " M "\n"); goto error;}
 
 
-typedef struct _Node Node;
+typedef struct Node_ Node;
 
-struct _Node {
+struct Node_ {
 	Node *next;
 	void *data;
 };
 
-struct _Stack {
+struct Stack_ {
 	Node *head;
 	DestroyFunc destroy_func;
 };

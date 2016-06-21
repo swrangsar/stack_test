@@ -1,5 +1,5 @@
-#ifndef _CONFIG_H_
-#define _CONFIG_H_
+#ifndef CONFIG_H
+#define CONFIG_H
 
 #include "rbmap.h"
 

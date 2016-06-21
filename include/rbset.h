@@ -1,9 +1,9 @@
-#ifndef _RBSET_H_
-#define _RBSET_H_
+#ifndef RBSET_H
+#define RBSET_H
 
 #include "types.h"
 
-typedef struct _RBSet RBSet;
+typedef struct RBSet_ RBSet;
 typedef int SetIterFunc(void *key, void *data);
 
 RBSet *rbset_new(CompareFunc, DestroyFunc key_dst);

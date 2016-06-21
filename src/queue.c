@@ -1,25 +1,24 @@
 #include "queue.h"
 #include <stdio.h>
 #include <stdlib.h>
-
 #include <errno.h>
 
 
 #define log_err(M)	{perror("error: queue: " M); goto error;}
 #define log_msg(M)	{fprintf(stderr, "error: queue: " M "\n"); goto error;}
 
-typedef struct _Node Node;
+typedef struct Node_ Node;
 
 static void queue_clear(Queue *queue);
 
 
 
-struct _Node {
+struct Node_ {
 	Node *next;
 	void *data;
 };
 
-struct _Queue {
+struct Queue_ {
 	Node *head;
 	Node *tail;
 	DestroyFunc destroy_func;

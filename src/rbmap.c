@@ -13,10 +13,10 @@ typedef enum {
 	RED
 } Color;
 
-typedef struct _Node Node;
+typedef struct Node_ Node;
 
 
-struct _Node {
+struct Node_ {
 	Node *parent;
 	Node *left;
 	Node *right;
@@ -25,7 +25,7 @@ struct _Node {
 	Color color;
 };
 
-struct _RBMap {
+struct RBMap_ {
 	Node *root;
 	CompareFunc cmp_func;
 	DestroyFunc key_dst_func;

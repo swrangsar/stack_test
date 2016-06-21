@@ -1,9 +1,9 @@
-#ifndef _STACK_H_
-#define _STACK_H_
+#ifndef STACK_H
+#define STACK_H
 
 #include "types.h"
 
-typedef struct _Stack Stack;
+typedef struct Stack_ Stack;
 
 Stack *stack_new(DestroyFunc);
 int stack_push(Stack*, void*);

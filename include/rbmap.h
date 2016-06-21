@@ -1,9 +1,9 @@
-#ifndef _RBMAP_H_
-#define _RBMAP_H_
+#ifndef RBMAP_H
+#define RBMAP_H
 
 #include "types.h"
 
-typedef struct _RBMap RBMap;
+typedef struct RBMap_ RBMap;
 typedef int TraverseFunc(void *key, void *val, void *data);
 
 RBMap *rbmap_new(CompareFunc, DestroyFunc key_dst, DestroyFunc val_dst);
