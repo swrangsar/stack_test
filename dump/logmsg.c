@@ -3,9 +3,9 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 
 
-static const char prognm[] = "rtmon_tail";
 
 #ifdef DEBUG
 static unsigned int verbosity = LOG_LEVEL_DBG;
@@ -35,7 +35,7 @@ void log_msg(unsigned int level, const char *file, int linenum, const char *func
 		int errsv = errno;
 		va_list ap;
 
-		fprintf(stderr, "%s: %s %s:%d:(%s) ", prognm, levels[level], file, linenum, func);
+		fprintf(stderr, "%ld: %s %s:%d:(%s) ", time(NULL), levels[level], file, linenum, func);
 		va_start(ap, fmt);
 		vfprintf(stderr, fmt, ap);
 		va_end(ap);
