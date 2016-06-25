@@ -1,5 +1,5 @@
-#ifndef RBSET_H
-#define RBSET_H
+#ifndef RBSET_H_
+#define RBSET_H_
 
 #include "types.h"
 

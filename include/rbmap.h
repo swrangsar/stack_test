@@ -1,5 +1,5 @@
-#ifndef RBMAP_H
-#define RBMAP_H
+#ifndef RBMAP_H_
+#define RBMAP_H_
 
 #include "types.h"
 
