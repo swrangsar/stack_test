@@ -238,7 +238,7 @@ static int insert(RBSet *tree, void *key)
 				goto error;
 			}
 		} else {
-			if (key != curr->key && tree->key_dst_func)
+			if (tree->key_dst_func)
 				tree->key_dst_func(key);
 			return 0;
 		}
