@@ -42,7 +42,7 @@ static void rotate_left(Node*);
 static void rotate_right(Node*);
 
 
-static int insert(RBMap *, void*, void*); 
+static int insert(RBMap *, void*, void*, int); 
 static void insert_cases(RBMap*, Node*);
 static Node *search(RBMap *, const void *);
 
@@ -193,13 +193,24 @@ int rbmap_insert(RBMap *tree, void *key, void *value)
 	if (!tree)
 		log_msg("rbmap_insert: null tree");
 
-	return insert(tree, key, value);
+	return insert(tree, key, value, 0);
 
 error:
 	return -1;
 }
 
-static int insert(RBMap *tree, void *key, void *value)
+int rbmap_replace(RBMap *tree, void *key, void *value)
+{
+	if (!tree)
+		log_msg("rbmap_insert: null tree");
+
+	return insert(tree, key, value, 1);
+
+error:
+	return -1;
+}
+
+static int insert(RBMap *tree, void *key, void *value, int replace)
 {
 	int res;
 	Node *curr;
@@ -244,11 +255,18 @@ static int insert(RBMap *tree, void *key, void *value)
 				goto error;
 			}
 		} else {
-			if (key != curr->key && tree->key_dst_func)
-				tree->key_dst_func(key);
-			if (value != curr->value && tree->val_dst_func)
+			if (tree->val_dst_func)
 				tree->val_dst_func(curr->value);
 			curr->value = value;
+
+			if (replace) {
+				if (tree->key_dst_func)
+					tree->key_dst_func(curr->key);
+				curr->key = key;
+			} else {
+				if (tree->key_dst_func)
+					tree->key_dst_func(key);
+			}
 			return 0;
 		}
 	} while (1);
