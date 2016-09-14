@@ -4,7 +4,7 @@ CC = cc
 RANLIB = ranlib
 ARFLAGS = rcs
 
-CFLAGS = -g -ansi -pedantic
+CFLAGS = -g -ansi -pedantic -Wno-variadic-macros
 ALL_CFLAGS = -Wall -O2 $(CFLAGS)
 
 srcdir = src
