@@ -1,4 +1,5 @@
 #include "logmsg.h"
+
 #include <errno.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -6,22 +7,16 @@
 #include <time.h>
 
 
-#ifdef DEBUG
-static const unsigned int verbosity = LOG_LEVEL_DBG;
-#else
-static const unsigned int verbosity = LOG_LEVEL_INFO;
-#endif
-
 extern int strerror_r(int errnum, char *buf, size_t buflen);
 
-void log_msg(unsigned int level, const char *file, int linenum, const char *fmt, ...)
+void log_msg(int level, const char *file, int linenum, const char *fmt, ...)
 {
-	if (level < LOG_LEVEL_CRIT)
-		level = LOG_LEVEL_CRIT;
-	else if (level > LOG_LEVEL_DBG)
-		level = LOG_LEVEL_DBG;
+	if (level < kLogLevelCritical)
+		level = kLogLevelCritical;
+	else if (level > kLogLevelDebug)
+		level = kLogLevelDebug;
 
-	if (level <= verbosity) {
+	if (level <= kVerbosity) {
 		static const char levels[5][4] = {
 			"crt",
 			"err",
