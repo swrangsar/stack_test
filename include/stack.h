@@ -4,13 +4,13 @@
 #include "types.h"
 
 
-struct StackNode {
-	struct StackNode *next;
+struct node {
+	struct node *next;
 	void *data;
 };
 
 struct Stack {
-	struct StackNode *head;
+	struct node *head;
 	DestroyFunc destroy_func;
 };
 

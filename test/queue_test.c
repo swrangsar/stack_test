@@ -1,17 +1,17 @@
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include <queue.h>
+#include "queue.h"
 
 #define log_err(M)	{perror("error: tester: " M); goto error;}
-#define LINE_SIZE	4096
 
 
 int main(const int argc, const char **argv)
 {
-	char line[LINE_SIZE];
-	Queue *queue = NULL;
+	char line[LINE_MAX];
+	struct Queue *queue = NULL;
 	FILE *conf_file = fopen("test.ini", "r");
 	int ret = 0;
 	
@@ -52,7 +52,7 @@ out:
 		fclose(conf_file);
 	if (queue)
 		queue_destroy(queue);
-	queue=NULL;
+	queue = NULL;
 	return ret;
 error:
 	ret = -1;

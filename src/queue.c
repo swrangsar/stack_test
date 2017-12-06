@@ -1,33 +1,23 @@
 #include "queue.h"
+
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <errno.h>
 
 
 #define log_err(M)	{perror("error: queue: " M); goto error;}
 #define log_msg(M)	{fprintf(stderr, "error: queue: " M "\n"); goto error;}
 
-typedef struct Node_ Node;
 
-static void queue_clear(Queue *queue);
-
+static void queue_clear(struct Queue *queue);
 
 
-struct Node_ {
-	Node *next;
-	void *data;
-};
-
-struct Queue_ {
-	Node *head;
-	Node *tail;
-	DestroyFunc destroy_func;
-};
 
 
-Queue *queue_new(DestroyFunc destroy_func)
+
+struct Queue *queue_new(DestroyFunc destroy_func)
 {
-	Queue *queue;
+	struct Queue *queue;
 	
 	if (!(queue = malloc(sizeof(*queue))))
 		log_err("queue_new");
@@ -39,9 +29,9 @@ error:
 	return queue;
 }
 
-int enqueue(Queue *queue, void *data)
+int enqueue(struct Queue *queue, void *data)
 {
-	Node *node;
+	struct node *node;
 	
 	if (!queue)
 		log_msg("enqueue: null queue!");
@@ -63,7 +53,7 @@ error:
 	return -1;
 }
 
-int queue_is_empty(Queue *queue)
+int queue_is_empty(struct Queue *queue)
 {
 	if (!queue)
 		log_msg("queue_is_empty: null queue!");
@@ -73,9 +63,9 @@ error:
 	return 1;
 }
 
-void *dequeue(Queue *queue)
+void *dequeue(struct Queue *queue)
 {
-	Node *node;
+	struct node *node;
 	void *data;
 	
 	if (!queue)
@@ -94,7 +84,7 @@ error:
 	return NULL;
 }
 
-static void queue_clear(Queue *queue)
+static void queue_clear(struct Queue *queue)
 {
 	if (!queue)
 		return;
@@ -108,7 +98,7 @@ static void queue_clear(Queue *queue)
 	}
 }
 
-void queue_destroy(Queue *queue)
+void queue_destroy(struct Queue *queue)
 {
 	if (!queue)
 		return;

@@ -2,13 +2,19 @@
 #define QUEUE_H_
 
 #include "types.h"
+#include "stack.h"
 
-typedef struct Queue_ Queue;
 
-Queue *queue_new(DestroyFunc);
-int enqueue(Queue *, void *);
-int queue_is_empty(Queue *);
-void *dequeue(Queue *);
-void queue_destroy(Queue *);
+struct Queue {
+	struct node *head;
+	struct node *tail;
+	DestroyFunc destroy_func;
+};
 
-#endif
+struct Queue *queue_new(DestroyFunc);
+int enqueue(struct Queue *, void *);
+int queue_is_empty(struct Queue *);
+void *dequeue(struct Queue *);
+void queue_destroy(struct Queue *);
+
+#endif  // QUEUE_H_

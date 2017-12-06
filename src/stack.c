@@ -29,7 +29,7 @@ error:
 
 int stack_push(struct Stack *stack, void *data)
 {
-	struct StackNode *node;
+	struct node *node;
 
 	if (!stack)
 		log_msg("stack_push: null stack");
@@ -58,7 +58,7 @@ error:
 
 void *stack_pop(struct Stack *stack)
 {
-	struct StackNode *node;
+	struct node *node;
 	void *data;
 
 	if (!stack)
