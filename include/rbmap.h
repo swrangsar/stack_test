@@ -4,10 +4,10 @@
 #include "types.h"
 
 
-typedef enum {
-	BLACK=0,
-	RED
-} Color;
+enum color {
+	Black,
+        Red
+};
 
 struct rbnode {
 	struct rbnode *parent;
@@ -15,7 +15,7 @@ struct rbnode {
 	struct rbnode *right;
 	void *key;
 	void *value;
-	Color color;
+	enum color color;
 };
 
 struct RBMap {

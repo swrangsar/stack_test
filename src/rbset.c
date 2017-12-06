@@ -43,7 +43,7 @@ static struct rbnode *node_new(void *key)
 	node->left = NULL;
 	node->right = NULL;
 	node->key = key;
-	node->color = RED;
+	node->color = Red;
 
 	return node;
 error:
@@ -243,21 +243,21 @@ static void insert_cases(struct RBSet *tree, struct rbnode *node)
 		if (!node)
 			log_msg("insert_case1: null node!");
 		if (!(parent = node->parent)) {
-			node->color = BLACK;
+			node->color = Black;
 			return;
 		}
 
 		/* insert case 2	*/
-		if (BLACK == parent->color)
+		if (Black == parent->color)
 			return;
 
 		/* insert case 3	*/
 		if (!(granpa = grandparent(node)))
 			log_msg("insert_case3: null granpa!");
-		if ((uncle = get_uncle(node)) && RED == uncle->color) {
-			parent->color = BLACK;
-			uncle->color = BLACK;
-			granpa->color = RED;
+		if ((uncle = get_uncle(node)) && Red == uncle->color) {
+			parent->color = Black;
+			uncle->color = Black;
+			granpa->color = Red;
 			node = granpa;
 		} else {
 			break;
@@ -281,8 +281,8 @@ static void insert_cases(struct RBSet *tree, struct rbnode *node)
 	if (!(granpa = grandparent(node)))
 		log_msg("insert_case5: granpa is null!");
 
-	parent->color = BLACK;
-	granpa->color = RED;
+	parent->color = Black;
+	granpa->color = Red;
 	(node == parent->left)?rotate_right(granpa):rotate_left(granpa);
 
 	if (!(parent->parent))
@@ -402,9 +402,9 @@ static int remove_child(struct RBSet *tree, struct rbnode *node)
 
 	child = node->left?node->left:node->right;
 
-	if (BLACK == node->color) {
-		if (child && RED == child->color)
-			child->color = BLACK;
+	if (Black == node->color) {
+		if (child && Red == child->color)
+			child->color = Black;
 		else
 			remove_cases(tree, node);
 	}
@@ -467,9 +467,9 @@ static void remove_cases(struct RBSet *tree, struct rbnode *node)
 		if (!(sibling = get_sibling(node)))
 			log_msg("remove_case2: sibling is null!");
 
-		if (RED == sibling->color) {
-			parent->color = RED;
-			sibling->color = BLACK;
+		if (Red == sibling->color) {
+			parent->color = Red;
+			sibling->color = Black;
 			granpa = parent->parent;
 
 			if (node == parent->left)
@@ -483,10 +483,10 @@ static void remove_cases(struct RBSet *tree, struct rbnode *node)
 			break;
 
 		/* remove case 3	*/
-		} else if (BLACK == parent->color && BLACK == sibling->color
-				&& (!sibling->left || BLACK == sibling->left->color)
-				&& (!sibling->right || BLACK == sibling->right->color)) {
-			sibling->color = RED;
+		} else if (Black == parent->color && Black == sibling->color
+				&& (!sibling->left || Black == sibling->left->color)
+				&& (!sibling->right || Black == sibling->right->color)) {
+			sibling->color = Red;
 			node = parent;
 		} else {
 			break;
@@ -495,27 +495,27 @@ static void remove_cases(struct RBSet *tree, struct rbnode *node)
 
 
 	/* remove case 4	*/
-	if (RED == parent->color && BLACK == sibling->color
-			&& (!sibling->left || BLACK == sibling->left->color)
-			&& (!sibling->right || BLACK == sibling->right->color)) {
-		parent->color = BLACK;
-		sibling->color = RED;
+	if (Red == parent->color && Black == sibling->color
+			&& (!sibling->left || Black == sibling->left->color)
+			&& (!sibling->right || Black == sibling->right->color)) {
+		parent->color = Black;
+		sibling->color = Red;
 		return;
 	}
 
 	/* remove case 5	*/
-	if (BLACK != sibling->color)
+	if (Black != sibling->color)
 		log_msg("remove_case5: sibling is red!");
 
 	if (node == parent->left
-			&& (!sibling->right || BLACK == sibling->right->color)) {
-		sibling->color = RED;
-		sibling->left->color = BLACK;
+			&& (!sibling->right || Black == sibling->right->color)) {
+		sibling->color = Red;
+		sibling->left->color = Black;
 		rotate_right(sibling);
 	} else if (node == parent->right
-			&& (!sibling->left || BLACK == sibling->left->color)) {
-		sibling->color = RED;
-		sibling->right->color = BLACK;
+			&& (!sibling->left || Black == sibling->left->color)) {
+		sibling->color = Red;
+		sibling->right->color = Black;
 		rotate_left(sibling);
 	}
 
@@ -524,23 +524,23 @@ static void remove_cases(struct RBSet *tree, struct rbnode *node)
 		log_msg("remove_case6: sibling is null!");
 
 	sibling->color = parent->color;
-	parent->color = BLACK;
+	parent->color = Black;
 	if (node == parent->left) {
 		rotate_left(parent);
 		if (!sibling->right)
 			log_msg("remove_case6: sibling's child null!");
-		if (RED != sibling->right->color)
-			log_msg("remove_case6: sibling's child not RED!");
+		if (Red != sibling->right->color)
+			log_msg("remove_case6: sibling's child not Red!");
 
-		sibling->right->color = BLACK;
+		sibling->right->color = Black;
 	} else {
 		rotate_right(parent);
 		if (!sibling->left)
 			log_msg("remove_case6: sibling's child null!");
-		if (RED != sibling->left->color)
-			log_msg("remove_case6: sibling's child not RED!");
+		if (Red != sibling->left->color)
+			log_msg("remove_case6: sibling's child not Red!");
 
-		sibling->left->color = BLACK;
+		sibling->left->color = Black;
 	}
 
 	if (!sibling->parent)
