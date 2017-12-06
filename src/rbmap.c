@@ -10,32 +10,32 @@
 
 
 
-static struct RBMNode *node_new(void *, void *);
-static void node_destroy(struct RBMNode*);
-static struct RBMNode *grandparent(const struct RBMNode *);
-static struct RBMNode *get_uncle(const struct RBMNode *);
-static struct RBMNode *get_sibling(const struct RBMNode*);
-static void rotate_left(struct RBMNode*);
-static void rotate_right(struct RBMNode*);
+static struct rbnode *node_new(void *, void *);
+static void node_destroy(struct rbnode*);
+static struct rbnode *grandparent(const struct rbnode *);
+static struct rbnode *get_uncle(const struct rbnode *);
+static struct rbnode *get_sibling(const struct rbnode*);
+static void rotate_left(struct rbnode*);
+static void rotate_right(struct rbnode*);
 
 
 static int insert(struct RBMap *, void*, void*, int); 
-static void insert_cases(struct RBMap*, struct RBMNode*);
-static struct RBMNode *search(struct RBMap *, const void *);
+static void insert_cases(struct RBMap*, struct rbnode*);
+static struct rbnode *search(struct RBMap *, const void *);
 
-static int remove_node(struct RBMap*, struct RBMNode*);
-static struct RBMNode *get_pred(struct RBMap*, struct RBMNode*);
-static int remove_child(struct RBMap*, struct RBMNode*);
-static void replace_with_child(struct RBMap*, struct RBMNode*, struct RBMNode*);
-static void remove_cases(struct RBMap*, struct RBMNode*);
+static int remove_node(struct RBMap*, struct rbnode*);
+static struct rbnode *get_pred(struct RBMap*, struct rbnode*);
+static int remove_child(struct RBMap*, struct rbnode*);
+static void replace_with_child(struct RBMap*, struct rbnode*, struct rbnode*);
+static void remove_cases(struct RBMap*, struct rbnode*);
 
 static void inorder(struct RBMap *, TraverseFunc, void *);
 
 
 
-static struct RBMNode *node_new(void *key, void *value)
+static struct rbnode *node_new(void *key, void *value)
 {
-	struct RBMNode *node;
+	struct rbnode *node;
 	
 	if (!(node = malloc(sizeof(*node))))
 		log_err("node_new");
@@ -52,7 +52,7 @@ error:
 	return NULL;
 }
 
-static struct RBMNode *grandparent(const struct RBMNode *node)
+static struct rbnode *grandparent(const struct rbnode *node)
 {
 	if (node && node->parent)
 		return node->parent->parent;
@@ -60,10 +60,10 @@ static struct RBMNode *grandparent(const struct RBMNode *node)
 		return NULL;
 }
 
-static struct RBMNode *get_uncle(const struct RBMNode *node)
+static struct rbnode *get_uncle(const struct rbnode *node)
 {
-	struct RBMNode *parent;
-	struct RBMNode *grandpa;
+	struct rbnode *parent;
+	struct rbnode *grandpa;
 
 	if (node && (parent = node->parent) && (grandpa = parent->parent))
 		return (parent == grandpa->left)?grandpa->right:grandpa->left;
@@ -71,9 +71,9 @@ static struct RBMNode *get_uncle(const struct RBMNode *node)
 		return NULL;
 }
 
-static struct RBMNode *get_sibling(const struct RBMNode *node)
+static struct rbnode *get_sibling(const struct rbnode *node)
 {
-	struct RBMNode *parent;
+	struct rbnode *parent;
 
 	if (!node)
 		log_msg("sibling: node is null!");
@@ -85,10 +85,10 @@ error:
 	return NULL;
 }
 
-static void rotate_left(struct RBMNode *node)
+static void rotate_left(struct rbnode *node)
 {
-	struct RBMNode *parent;
-	struct RBMNode *right;
+	struct rbnode *parent;
+	struct rbnode *right;
 	
 	if (!node)
 		return;
@@ -111,10 +111,10 @@ static void rotate_left(struct RBMNode *node)
 		node->right->parent = node;
 }
 
-static void rotate_right(struct RBMNode *node)
+static void rotate_right(struct rbnode *node)
 {
-	struct RBMNode *parent;
-	struct RBMNode *left;
+	struct rbnode *parent;
+	struct rbnode *left;
 
 	if (!node)
 		return;
@@ -137,7 +137,7 @@ static void rotate_right(struct RBMNode *node)
 		node->left->parent = node;
 }
 
-static void node_destroy(struct RBMNode *node)
+static void node_destroy(struct rbnode *node)
 {
 	free(node);
 }
@@ -190,8 +190,8 @@ error:
 static int insert(struct RBMap *tree, void *key, void *value, int replace)
 {
 	int res;
-	struct RBMNode *curr;
-	struct RBMNode *new;
+	struct rbnode *curr;
+	struct rbnode *new;
 	CompareFunc cmp_func;
 
 	if (!tree)
@@ -255,11 +255,11 @@ error:
 	return -1;
 }
 
-static void insert_cases(struct RBMap *tree, struct RBMNode *node)
+static void insert_cases(struct RBMap *tree, struct rbnode *node)
 {
-	struct RBMNode *parent;
-	struct RBMNode *granpa;
-	struct RBMNode *uncle;
+	struct rbnode *parent;
+	struct rbnode *granpa;
+	struct rbnode *uncle;
 
 	if (!tree)
 		log_msg("insert_cases: tree is null!");
@@ -320,7 +320,7 @@ error:
 
 void *rbmap_search(struct RBMap *tree, const void *key)
 {
-	struct RBMNode *found;
+	struct rbnode *found;
 
 	if (!tree)
 		log_msg("rbmap_search: tree is null!");
@@ -332,10 +332,10 @@ error:
 	return NULL;
 }
 
-static struct RBMNode *search(struct RBMap *tree, const void *key)
+static struct rbnode *search(struct RBMap *tree, const void *key)
 {
 	int res;
-	struct RBMNode *curr;
+	struct rbnode *curr;
 	CompareFunc cmp_func;
 
 	if (!tree)
@@ -367,7 +367,7 @@ error:
 
 int rbmap_remove(struct RBMap *tree, const void *key)
 {
-	struct RBMNode *found;
+	struct rbnode *found;
 
 	if (!tree)
 		log_msg("rbmap_remove: tree is null!");
@@ -380,9 +380,9 @@ error:
 	return -1;
 }
 
-static int remove_node(struct RBMap *tree, struct RBMNode *node)
+static int remove_node(struct RBMap *tree, struct rbnode *node)
 {
-	struct RBMNode *pred;
+	struct rbnode *pred;
 	void *temp_key;
 	void *temp_val;
 
@@ -408,9 +408,9 @@ error:
 	return -1;
 }
 
-static struct RBMNode *get_pred(struct RBMap *tree, struct RBMNode *node)
+static struct rbnode *get_pred(struct RBMap *tree, struct rbnode *node)
 {
-	struct RBMNode *pred;
+	struct rbnode *pred;
 
 	if (!tree)
 		log_msg("get_pred: tree is null!");
@@ -427,9 +427,9 @@ error:
 	return NULL;
 }
 
-static int remove_child(struct RBMap *tree, struct RBMNode *node)
+static int remove_child(struct RBMap *tree, struct rbnode *node)
 {
-	struct RBMNode *child;
+	struct rbnode *child;
 
 	if (!tree)
 		log_msg("remove_child: tree is null!");
@@ -452,9 +452,9 @@ error:
 	return -1;
 }
 
-static void replace_with_child(struct RBMap *tree, struct RBMNode *node, struct RBMNode *child)
+static void replace_with_child(struct RBMap *tree, struct rbnode *node, struct rbnode *child)
 {
-	struct RBMNode *parent;
+	struct rbnode *parent;
 
 	if (!tree)
 		log_msg("replace_child: tree is null!");
@@ -487,11 +487,11 @@ error:
 	return;
 }
 
-static void remove_cases(struct RBMap *tree, struct RBMNode *node)
+static void remove_cases(struct RBMap *tree, struct rbnode *node)
 {
-	struct RBMNode *parent;
-	struct RBMNode *sibling;
-	struct RBMNode *granpa;
+	struct rbnode *parent;
+	struct rbnode *sibling;
+	struct rbnode *granpa;
 
 	if (!tree)
 		log_msg("remove_cases: tree is null!");
@@ -596,9 +596,9 @@ void rbmap_foreach(struct RBMap *tree, TraverseFunc trav_func, void *data)
 
 static void inorder(struct RBMap *tree, TraverseFunc trav_func, void *data)
 {
-	struct RBMNode *curr;
-	struct RBMNode *prev;
-	struct RBMNode *next;
+	struct rbnode *curr;
+	struct rbnode *prev;
+	struct rbnode *next;
 
 	if (!tree)
 		log_msg("inorder: null tree!");
@@ -632,8 +632,8 @@ error:
 
 void rbmap_clear(struct RBMap *tree)
 {
-	struct RBMNode *curr;
-	struct RBMNode *parent;
+	struct rbnode *curr;
+	struct rbnode *parent;
 	DestroyFunc key_dst_func;
 	DestroyFunc val_dst_func;
 

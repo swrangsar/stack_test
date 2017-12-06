@@ -9,17 +9,17 @@ typedef enum {
 	RED
 } Color;
 
-struct RBMNode {
-	struct RBMNode *parent;
-	struct RBMNode *left;
-	struct RBMNode *right;
+struct rbnode {
+	struct rbnode *parent;
+	struct rbnode *left;
+	struct rbnode *right;
 	void *key;
 	void *value;
 	Color color;
 };
 
 struct RBMap {
-	struct RBMNode *root;
+	struct rbnode *root;
 	CompareFunc cmp_func;
 	DestroyFunc key_dst_func;
 	DestroyFunc val_dst_func;
@@ -36,4 +36,4 @@ int rbmap_remove(struct RBMap *, const void *key);
 void rbmap_clear(struct RBMap *);
 void rbmap_destroy(struct RBMap *);
 
-#endif
+#endif  // RBMAP_H_

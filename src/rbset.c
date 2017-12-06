@@ -1,62 +1,40 @@
 #include "rbset.h"
+
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <errno.h>
 
 
-#define log_err(M)	{perror("error: RBSet: " M); goto error;}
-#define log_msg(M)	{fprintf(stderr, "error: RBSet: " M "\n"); goto error;}
+#define log_err(M)	{perror("error: struct RBSet: " M); goto error;}
+#define log_msg(M)	{fprintf(stderr, "error: struct RBSet: " M "\n"); goto error;}
 
 
-typedef enum {
-	BLACK=0,
-	RED
-} Color;
-
-typedef struct Node_ Node;
-
-
-struct Node_ {
-	Node *parent;
-	Node *left;
-	Node *right;
-	void *key;
-	Color color;
-};
-
-struct RBSet_ {
-	Node *root;
-	CompareFunc cmp_func;
-	DestroyFunc key_dst_func;
-};
+static struct rbnode *node_new(void *);
+static void node_destroy(struct rbnode *);
+static struct rbnode *grandparent(const struct rbnode *);
+static struct rbnode *get_uncle(const struct rbnode *);
+static struct rbnode *get_sibling(const struct rbnode *);
+static void rotate_left(struct rbnode *);
+static void rotate_right(struct rbnode *);
 
 
-static Node *node_new(void *);
-static void node_destroy(Node *);
-static Node *grandparent(const Node *);
-static Node *get_uncle(const Node *);
-static Node *get_sibling(const Node *);
-static void rotate_left(Node *);
-static void rotate_right(Node *);
+static int insert(struct RBSet *, void *); 
+static void insert_cases(struct RBSet *, struct rbnode *);
+static struct rbnode *search(struct RBSet *, const void *);
 
+static int remove_node(struct RBSet*, struct rbnode*);
+static struct rbnode *get_pred(struct RBSet*, struct rbnode*);
+static int remove_child(struct RBSet*, struct rbnode*);
+static void replace_with_child(struct RBSet *, struct rbnode *, struct rbnode *);
+static void remove_cases(struct RBSet *, struct rbnode *);
 
-static int insert(RBSet *, void *); 
-static void insert_cases(RBSet *, Node *);
-static Node *search(RBSet *, const void *);
-
-static int remove_node(RBSet*, Node*);
-static Node *get_pred(RBSet*, Node*);
-static int remove_child(RBSet*, Node*);
-static void replace_with_child(RBSet *, Node *, Node *);
-static void remove_cases(RBSet *, Node *);
-
-static void inorder(RBSet *, SetIterFunc, void *);
+static void inorder(struct RBSet *, SetIterFunc, void *);
 
 
 
-static Node *node_new(void *key)
+static struct rbnode *node_new(void *key)
 {
-	Node *node;
+	struct rbnode *node;
 	
 	if (!(node = malloc(sizeof(*node))))
 		log_err("node_new");
@@ -72,7 +50,7 @@ error:
 	return NULL;
 }
 
-static Node *grandparent(const Node *node)
+static struct rbnode *grandparent(const struct rbnode *node)
 {
 	if (node && node->parent)
 		return node->parent->parent;
@@ -80,10 +58,10 @@ static Node *grandparent(const Node *node)
 		return NULL;
 }
 
-static Node *get_uncle(const Node *node)
+static struct rbnode *get_uncle(const struct rbnode *node)
 {
-	Node *parent;
-	Node *grandpa;
+	struct rbnode *parent;
+	struct rbnode *grandpa;
 
 	if (node && (parent = node->parent) && (grandpa = parent->parent))
 		return (parent == grandpa->left)?grandpa->right:grandpa->left;
@@ -91,9 +69,9 @@ static Node *get_uncle(const Node *node)
 		return NULL;
 }
 
-static Node *get_sibling(const Node *node)
+static struct rbnode *get_sibling(const struct rbnode *node)
 {
-	Node *parent;
+	struct rbnode *parent;
 
 	if (!node)
 		log_msg("sibling: node is null!");
@@ -105,10 +83,10 @@ error:
 	return NULL;
 }
 
-static void rotate_left(Node *node)
+static void rotate_left(struct rbnode *node)
 {
-	Node *parent;
-	Node *right;
+	struct rbnode *parent;
+	struct rbnode *right;
 	
 	if (!node)
 		return;
@@ -131,10 +109,10 @@ static void rotate_left(Node *node)
 		node->right->parent = node;
 }
 
-static void rotate_right(Node *node)
+static void rotate_right(struct rbnode *node)
 {
-	Node *parent;
-	Node *left;
+	struct rbnode *parent;
+	struct rbnode *left;
 
 	if (!node)
 		return;
@@ -157,16 +135,16 @@ static void rotate_right(Node *node)
 		node->left->parent = node;
 }
 
-static void node_destroy(Node *node)
+static void node_destroy(struct rbnode *node)
 {
 	free(node);
 }
 
 
     
-RBSet* rbset_new(CompareFunc cmp, DestroyFunc key_dst)
+struct RBSet* rbset_new(CompareFunc cmp, DestroyFunc key_dst)
 {
-	RBSet *tree;
+	struct RBSet *tree;
 	
 	if (!cmp)
 		log_msg("rbset_new: null compare_func!");
@@ -183,7 +161,7 @@ error:
 	return NULL;
 }
 
-int rbset_insert(RBSet *tree, void *key)
+int rbset_insert(struct RBSet *tree, void *key)
 {
 	if (!tree)
 		log_msg("rbset_insert: null tree");
@@ -193,11 +171,11 @@ error:
 	return -1;
 }
 
-static int insert(RBSet *tree, void *key)
+static int insert(struct RBSet *tree, void *key)
 {
 	int res;
-	Node *curr;
-	Node *new;
+	struct rbnode *curr;
+	struct rbnode *new;
 	CompareFunc cmp_func;
 
 	if (!tree)
@@ -251,11 +229,11 @@ error:
 	return -1;
 }
 
-static void insert_cases(RBSet *tree, Node *node)
+static void insert_cases(struct RBSet *tree, struct rbnode *node)
 {
-	Node *parent;
-	Node *granpa;
-	Node *uncle;
+	struct rbnode *parent;
+	struct rbnode *granpa;
+	struct rbnode *uncle;
 
 	if (!tree)
 		log_msg("insert_cases: tree is null!");
@@ -314,7 +292,7 @@ error:
 	return;
 }
 
-int rbset_search(RBSet *tree, const void *key)
+int rbset_search(struct RBSet *tree, const void *key)
 {
 	if (!tree)
 		log_msg("rbset_search: tree is null!");
@@ -324,10 +302,10 @@ error:
 	return -1;
 }
 
-static Node *search(RBSet *tree, const void *key)
+static struct rbnode *search(struct RBSet *tree, const void *key)
 {
 	int res;
-	Node *curr;
+	struct rbnode *curr;
 	CompareFunc cmp_func;
 
 	if (!tree)
@@ -356,9 +334,9 @@ error:
 	return NULL;
 }
 
-int rbset_remove(RBSet *tree, const void *key)
+int rbset_remove(struct RBSet *tree, const void *key)
 {
-	Node *found;
+	struct rbnode *found;
 
 	if (!tree)
 		log_msg("rbset_remove: tree is null!");
@@ -370,9 +348,9 @@ error:
 	return -1;
 }
 
-static int remove_node(RBSet *tree, Node *node)
+static int remove_node(struct RBSet *tree, struct rbnode *node)
 {
-	Node *pred;
+	struct rbnode *pred;
 	void *temp_key;
 
 	if (!tree)
@@ -394,9 +372,9 @@ error:
 	return -1;
 }
 
-static Node *get_pred(RBSet *tree, Node *node)
+static struct rbnode *get_pred(struct RBSet *tree, struct rbnode *node)
 {
-	Node *pred;
+	struct rbnode *pred;
 
 	if (!tree)
 		log_msg("get_pred: tree is null!");
@@ -413,9 +391,9 @@ error:
 	return NULL;
 }
 
-static int remove_child(RBSet *tree, Node *node)
+static int remove_child(struct RBSet *tree, struct rbnode *node)
 {
-	Node *child;
+	struct rbnode *child;
 
 	if (!tree)
 		log_msg("remove_child: tree is null!");
@@ -438,9 +416,9 @@ error:
 	return -1;
 }
 
-static void replace_with_child(RBSet *tree, Node *node, Node *child)
+static void replace_with_child(struct RBSet *tree, struct rbnode *node, struct rbnode *child)
 {
-	Node *parent;
+	struct rbnode *parent;
 
 	if (!tree)
 		log_msg("replace_child: tree is null!");
@@ -470,11 +448,11 @@ error:
 	return;
 }
 
-static void remove_cases(RBSet *tree, Node *node)
+static void remove_cases(struct RBSet *tree, struct rbnode *node)
 {
-	Node *parent;
-	Node *sibling;
-	Node *granpa;
+	struct rbnode *parent;
+	struct rbnode *sibling;
+	struct rbnode *granpa;
 
 	if (!tree)
 		log_msg("remove_cases: tree is null!");
@@ -572,16 +550,16 @@ error:
 	return;
 }
 
-void rbset_foreach(RBSet *tree, SetIterFunc iter_func, void *data)
+void rbset_foreach(struct RBSet *tree, SetIterFunc iter_func, void *data)
 {
 	inorder(tree, iter_func, data);
 }
 
-static void inorder(RBSet *tree, SetIterFunc iter_func, void *data)
+static void inorder(struct RBSet *tree, SetIterFunc iter_func, void *data)
 {
-	Node *curr;
-	Node *prev;
-	Node *next;
+	struct rbnode *curr;
+	struct rbnode *prev;
+	struct rbnode *next;
 
 	if (!tree)
 		log_msg("inorder: null tree!");
@@ -613,10 +591,10 @@ error:
 	return;
 }
 
-void rbset_clear(RBSet *tree)
+void rbset_clear(struct RBSet *tree)
 {
-	Node *curr;
-	Node *parent;
+	struct rbnode *curr;
+	struct rbnode *parent;
 	DestroyFunc key_dst_func;
 
 	if (!tree)
@@ -653,7 +631,7 @@ error:
 	return;
 }
 
-void rbset_destroy(RBSet *tree)
+void rbset_destroy(struct RBSet *tree)
 {
 	if (!tree)
 		return;
