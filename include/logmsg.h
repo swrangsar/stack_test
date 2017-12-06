@@ -10,9 +10,9 @@ enum {
 };
 
 #ifdef DEBUG
-const int kVerbosity = kLogLevelDebug;
+static const int kVerbosity = kLogLevelDebug;
 #else
-const int kVerbosity = kLogLevelInfo;
+static const int kVerbosity = kLogLevelInfo;
 #endif
 
 void log_msg(int level, const char *file, int line, const char *fmt, ...);

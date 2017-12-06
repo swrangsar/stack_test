@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <rbset.h>
+#include "rbset.h"
 
 #define log_msg(M)	{fprintf(stderr, "error: rbset_test: " M "\n"); goto error;}
 

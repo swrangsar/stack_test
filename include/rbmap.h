@@ -28,7 +28,6 @@ struct RBMap {
 typedef int TraverseFunc(void *key, void *val, void *data);
 
 int rbmap_init(struct RBMap *tree, CompareFunc cmp, DestroyFunc key_dst, DestroyFunc val_dst);
-struct RBMap *rbmap_new(CompareFunc, DestroyFunc key_dst, DestroyFunc val_dst);
 int rbmap_insert(struct RBMap *, void *key, void *val);
 int rbmap_replace(struct RBMap *, void *key, void *val);
 void *rbmap_search(struct RBMap *, const void *key);

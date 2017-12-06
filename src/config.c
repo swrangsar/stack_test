@@ -34,7 +34,7 @@ int get_conf_map(const char *filename, struct RBMap *map)
 	FILE *conf_file = NULL;
 
 	if ((conf_file = fopen(filename, "r"))) {
-		if ((map = rbmap_new(compare, free, free))) {
+		if ((!rbmap_init(map, compare, free, free))) {
 			while (fgets(line, sizeof(line), conf_file))
 				process_line(line, map);
 			ret_val = 0;

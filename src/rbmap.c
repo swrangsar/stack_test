@@ -261,61 +261,67 @@ static void insert_cases(struct RBMap *tree, struct rbnode *node)
 	struct rbnode *granpa;
 	struct rbnode *uncle;
 
-	if (!tree)
-		log_msg("insert_cases: tree is null!");
+	if (tree) {
+		do {
+			if (!node) {
+				log_err("insert_case1: null node\n");
+				return;
+			}
+			if (!(parent = node->parent)) {
+				node->color = Black;
+				return;
+			}
+
+			/* insert case 2	*/
+			if (Black == parent->color)
+				return;
+
+			/* insert case 3	*/
+			if (!(granpa = grandparent(node))) {
+				log_err("insert_case3: null granpa\n");
+				return;
+			}
+			if ((uncle = get_uncle(node)) && Red == uncle->color) {
+				parent->color = Black;
+				uncle->color = Black;
+				granpa->color = Red;
+				node = granpa;
+			} else {
+				break;
+			}
+		} while (1);
 
 
-	do {
-		if (!node)
-			log_msg("insert_case1: null node!");
+		/* insert case 4	*/
+		if (node == parent->right && parent == granpa->left) {
+			rotate_left(parent);
+			node = parent;
+		} else if (node == parent->left && parent == granpa->right) {
+			rotate_right(parent);
+			node = parent;
+		}
+
+
+		/* insert case 5	*/
 		if (!(parent = node->parent)) {
-			node->color = Black;
+			log_err("insert_case5: parent is null\n");
+			return;
+		}
+		if (!(granpa = grandparent(node))) {
+			log_err("insert_case5: granpa is null\n");
 			return;
 		}
 
-		/* insert case 2	*/
-		if (Black == parent->color)
-			return;
+		parent->color = Black;
+		granpa->color = Red;
+		(node == parent->left)?rotate_right(granpa):rotate_left(granpa);
 
-		/* insert case 3	*/
-		if (!(granpa = grandparent(node)))
-			log_msg("insert_case3: null granpa!");
-		if ((uncle = get_uncle(node)) && Red == uncle->color) {
-			parent->color = Black;
-			uncle->color = Black;
-			granpa->color = Red;
-			node = granpa;
-		} else {
-			break;
-		}
-	} while (1);
+		if (!(parent->parent))
+			tree->root = parent;
 
-
-	/* insert case 4	*/
-	if (node == parent->right && parent == granpa->left) {
-		rotate_left(parent);
-		node = parent;
-	} else if (node == parent->left && parent == granpa->right) {
-		rotate_right(parent);
-		node = parent;
+	} else {
+		log_err("insert_cases: tree is null\n");
 	}
-
-
-	/* insert case 5	*/
-	if (!(parent = node->parent))
-		log_msg("insert_case5: parent is null!");
-	if (!(granpa = grandparent(node)))
-		log_msg("insert_case5: granpa is null!");
-
-	parent->color = Black;
-	granpa->color = Red;
-	(node == parent->left)?rotate_right(granpa):rotate_left(granpa);
-
-	if (!(parent->parent))
-		tree->root = parent;
-
-error:
-	return;
 }
 
 void *rbmap_search(struct RBMap *tree, const void *key)
@@ -335,7 +341,6 @@ void *rbmap_search(struct RBMap *tree, const void *key)
 
 static struct rbnode *search(struct RBMap *tree, const void *key)
 {
-	struct rbnode *found = NULL;
 	int res;
 	struct rbnode *curr = NULL;
 	CompareFunc cmp_func;
@@ -375,89 +380,101 @@ static struct rbnode *search(struct RBMap *tree, const void *key)
 
 int rbmap_remove(struct RBMap *tree, const void *key)
 {
+	int ret_val = -1;
 	struct rbnode *found;
 
-	if (!tree)
-		log_msg("rbmap_remove: tree is null!");
+	if (tree) {
+		ret_val = 0;
+		if ((found = search(tree, key)))
+			ret_val = remove_node(tree, found);
+	} else {
+		log_err("rbmap_remove: tree is null\n");
+	}
 
-	if ((found = search(tree, key)))
-		return remove_node(tree, found);
-
-	return 0;
-error:
-	return -1;
+	return ret_val;
 }
 
 static int remove_node(struct RBMap *tree, struct rbnode *node)
 {
+	int ret_val = -1;
 	struct rbnode *pred;
 	void *temp_key;
 	void *temp_val;
 
-	if (!tree)
-		log_msg("remove_node: tree is null!");
-	if (!node)
-		log_msg("remove_node: node is null!");
+	if (tree) {
+		if (node) {
+			pred = node;
+			if (node->left && node->right) {
+				pred = get_pred(tree, node);
 
-	pred = node;
-	if (node->left && node->right) {
-		pred = get_pred(tree, node);
+				temp_key = node->key;
+				temp_val = node->value;
+				node->key = pred->key;
+				node->value = pred->value;
+				pred->key = temp_key;
+				pred->value = temp_val;
+			}
 
-		temp_key = node->key;
-		temp_val = node->value;
-		node->key = pred->key;
-		node->value = pred->value;
-		pred->key = temp_key;
-		pred->value = temp_val;
+			ret_val = remove_child(tree, pred);
+		} else {
+			log_err("remove_node: node is null\n");
+		}
+	} else {
+		log_err("remove_node: tree is null\n");
 	}
 
-	return remove_child(tree, pred);
-error:
-	return -1;
+	return ret_val;
 }
 
 static struct rbnode *get_pred(struct RBMap *tree, struct rbnode *node)
 {
-	struct rbnode *pred;
+	struct rbnode *pred = NULL;
 
-	if (!tree)
-		log_msg("get_pred: tree is null!");
-	if (!node)
-		log_msg("get_pred: node is null!");
-	if (!(pred = node->left))
-		log_msg("get_pred: predecessor is NULL!");
-
-	while (pred->right)
-		pred = pred->right;
+	if (tree) {
+		if (node) {
+			if ((pred = node->left)) {
+				while (pred->right)
+					pred = pred->right;
+			} else {
+				log_err("get_pred: predecessor is NULL\n");
+			}
+		} else {
+			log_err("get_pred: node is null\n");
+		}
+	} else {
+		log_err("get_pred: tree is null\n");
+	}
 
 	return pred;
-error:
-	return NULL;
 }
 
 static int remove_child(struct RBMap *tree, struct rbnode *node)
 {
+	int ret_val = -1;
 	struct rbnode *child;
 
-	if (!tree)
-		log_msg("remove_child: tree is null!");
-	if (!node)
-		log_msg("remove_child: node is null!");
+	if (tree) {
+		if (node) {
+			child = node->left?node->left:node->right;
 
-	child = node->left?node->left:node->right;
+			if (Black == node->color) {
+				if (child && Red == child->color)
+					child->color = Black;
+				else
+					remove_cases(tree, node);
+			}
 
-	if (Black == node->color) {
-		if (child && Red == child->color)
-			child->color = Black;
-		else
-			remove_cases(tree, node);
+			replace_with_child(tree, node, child);
+			node = NULL;
+			ret_val = 0;
+		} else {
+			log_err("remove_child: node is null\n");
+		}
+	} else {
+		log_err("remove_child: tree is null\n");
 	}
 
-	replace_with_child(tree, node, child);
-	node = NULL;
-	return 0;
-error:
-	return -1;
+	return ret_val;
 }
 
 static void replace_with_child(struct RBMap *tree, struct rbnode *node, struct rbnode *child)
@@ -502,100 +519,114 @@ static void remove_cases(struct RBMap *tree, struct rbnode *node)
 	struct rbnode *sibling;
 	struct rbnode *granpa;
 
-	if (!tree)
-		log_msg("remove_cases: tree is null!");
+	if (tree) {
+		do {
+			if (!node) {
+				log_err("remove_case1: node is null\n");
+				return;
+			}
+			if (!(parent = node->parent))
+				return;
 
-	do {
-		if (!node)
-			log_msg("remove_case1: node is null!");
-		if (!(parent = node->parent))
-			return;
+			/* remove case 2	*/
+			if (!(sibling = get_sibling(node))) {
+				log_err("remove_case2: sibling is null\n");
+				return;
+			}
 
-		/* remove case 2	*/
-		if (!(sibling = get_sibling(node)))
-			log_msg("remove_case2: sibling is null!");
+			if (Red == sibling->color) {
+				parent->color = Red;
+				sibling->color = Black;
+				granpa = parent->parent;
 
-		if (Red == sibling->color) {
-			parent->color = Red;
-			sibling->color = Black;
-			granpa = parent->parent;
+				if (node == parent->left)
+					rotate_left(parent);
+				else
+					rotate_right(parent);
 
-			if (node == parent->left)
-				rotate_left(parent);
-			else
-				rotate_right(parent);
+				if (!granpa)
+					tree->root = sibling;
 
-			if (!granpa)
-				tree->root = sibling;
+				break;
 
-			break;
+				/* remove case 3	*/
+			} else if (Black == parent->color && Black == sibling->color
+					&& (!sibling->left || Black == sibling->left->color)
+					&& (!sibling->right || Black == sibling->right->color)) {
+				sibling->color = Red;
+				node = parent;
+			} else {
+				break;
+			}
+		} while (1);
 
-			/* remove case 3	*/
-		} else if (Black == parent->color && Black == sibling->color
+
+		/* remove case 4	*/
+		if (Red == parent->color && Black == sibling->color
 				&& (!sibling->left || Black == sibling->left->color)
 				&& (!sibling->right || Black == sibling->right->color)) {
+			parent->color = Black;
 			sibling->color = Red;
-			node = parent;
-		} else {
-			break;
+			return;
 		}
-	} while (1);
 
+		/* remove case 5	*/
+		if (Black != sibling->color) {
+			log_err("remove_case5: sibling is red\n");
+			return;
+		}
 
-	/* remove case 4	*/
-	if (Red == parent->color && Black == sibling->color
-			&& (!sibling->left || Black == sibling->left->color)
-			&& (!sibling->right || Black == sibling->right->color)) {
+		if (node == parent->left
+				&& (!sibling->right || Black == sibling->right->color)) {
+			sibling->color = Red;
+			sibling->left->color = Black;
+			rotate_right(sibling);
+		} else if (node == parent->right
+				&& (!sibling->left || Black == sibling->left->color)) {
+			sibling->color = Red;
+			sibling->right->color = Black;
+			rotate_left(sibling);
+		}
+
+		/* remove case 6	*/
+		if (!(sibling = get_sibling(node))) {
+			log_err("remove_case6: sibling is null\n");
+			return;
+		}
+
+		sibling->color = parent->color;
 		parent->color = Black;
-		sibling->color = Red;
-		return;
-	}
+		if (node == parent->left) {
+			rotate_left(parent);
+			if (!sibling->right) {
+				log_err("remove_case6: sibling's child null\n");
+				return;
+			}
+			if (Red != sibling->right->color) {
+				log_err("remove_case6: sibling's child not Red\n");
+				return;
+			}
 
-	/* remove case 5	*/
-	if (Black != sibling->color)
-		log_msg("remove_case5: sibling is red!");
+			sibling->right->color = Black;
+		} else {
+			rotate_right(parent);
+			if (!sibling->left) {
+				log_err("remove_case6: sibling's child null\n");
+				return;
+			}
+			if (Red != sibling->left->color) {
+				log_err("remove_case6: sibling's child not Red\n");
+				return;
+			}
 
-	if (node == parent->left
-			&& (!sibling->right || Black == sibling->right->color)) {
-		sibling->color = Red;
-		sibling->left->color = Black;
-		rotate_right(sibling);
-	} else if (node == parent->right
-			&& (!sibling->left || Black == sibling->left->color)) {
-		sibling->color = Red;
-		sibling->right->color = Black;
-		rotate_left(sibling);
-	}
+			sibling->left->color = Black;
+		}
 
-	/* remove case 6	*/
-	if (!(sibling = get_sibling(node)))
-		log_msg("remove_case6: sibling is null!");
-
-	sibling->color = parent->color;
-	parent->color = Black;
-	if (node == parent->left) {
-		rotate_left(parent);
-		if (!sibling->right)
-			log_msg("remove_case6: sibling's child null!");
-		if (Red != sibling->right->color)
-			log_msg("remove_case6: sibling's child not Red!");
-
-		sibling->right->color = Black;
+		if (!sibling->parent)
+			tree->root = sibling;
 	} else {
-		rotate_right(parent);
-		if (!sibling->left)
-			log_msg("remove_case6: sibling's child null!");
-		if (Red != sibling->left->color)
-			log_msg("remove_case6: sibling's child not Red!");
-
-		sibling->left->color = Black;
+		log_err("remove_cases: tree is null\n");
 	}
-
-	if (!sibling->parent)
-		tree->root = sibling;
-
-error:
-	return;
 }
 
 void rbmap_foreach(struct RBMap *tree, TraverseFunc trav_func, void *data)
@@ -626,11 +657,11 @@ static void inorder(struct RBMap *tree, TraverseFunc trav_func, void *data)
 				next = curr->parent;
 			} else {
 				log_err("inorder: curr is not l, r or p\n");
+				break;
 			}
 			prev = curr;
 			curr = next;
 		}
-
 	} else {
 		log_err("inorder: null tree\n");
 	}

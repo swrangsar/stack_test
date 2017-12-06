@@ -1,39 +1,38 @@
-#include <config.h>
+#include "config.h"
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <rbmap.h>
+#include "rbmap.h"
+
 
 static int show_key_val(void *, void *, void *);
 
 
 int main(const int argc, const char **argv)
 {
-	RBMap *conf_map;
+	struct RBMap conf_map = {NULL,};
 	char *found;
 
-	conf_map = get_conf_map("test.ini");
-	if (!conf_map)
+	if (get_conf_map("test.ini", &conf_map))
 		return -1;
 
-	found = (char *)rbmap_search(conf_map, (const void *)"logs_path");
+	found = (char *)rbmap_search(&conf_map, (const void *)"logs_path");
 	if (found)
 		printf("main: Yay!... found: %s\n", found);
 	
-	rbmap_remove(conf_map, (const void *)"logs_path");
+	rbmap_remove(&conf_map, (const void *)"logs_path");
 	
-	if ((found = (char *)rbmap_search(conf_map, (const void *)"logs_path")))
+	if ((found = (char *)rbmap_search(&conf_map, (const void *)"logs_path")))
 		printf("main: error: Huh!... found again: %s\n", found);
 	
-	if ((found = (char *)rbmap_search(conf_map, (const void *)"ip_address")))
+	if ((found = (char *)rbmap_search(&conf_map, (const void *)"ip_address")))
 		printf("main: found IP: %s\n", found);
-	if ((found = (char *)rbmap_search(conf_map, (const void *)"server_port")))
+	if ((found = (char *)rbmap_search(&conf_map, (const void *)"server_port")))
 		printf("main: found server_port: %s\n", found);
 
-	rbmap_foreach(conf_map, show_key_val, NULL);
+	rbmap_foreach(&conf_map, show_key_val, NULL);
 
-	rbmap_destroy(conf_map);
-	conf_map = NULL;
+	rbmap_destroy(&conf_map);
 	
 	return 0;
 }
