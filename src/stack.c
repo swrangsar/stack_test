@@ -1,33 +1,21 @@
 #include "stack.h"
+
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <errno.h>
 
 
 #define log_err(M)	{perror("error: stack: " M); goto error;}
 #define log_msg(M)	{fprintf(stderr, "error: stack: " M "\n"); goto error;}
 
 
-typedef struct Node_ Node;
-
-struct Node_ {
-	Node *next;
-	void *data;
-};
-
-struct Stack_ {
-	Node *head;
-	DestroyFunc destroy_func;
-};
+static void stack_clear(struct Stack *stack);
 
 
-static void stack_clear(Stack *stack);
-
-
-Stack *stack_new(DestroyFunc destroy_func)
+struct Stack *stack_new(DestroyFunc destroy_func)
 {
-	Stack *stack;
+	struct Stack *stack;
 	
 	if (!(stack = malloc(sizeof(*stack))))
 		log_err("stack_new");
@@ -39,9 +27,9 @@ error:
 }
 
 
-int stack_push(Stack *stack, void *data)
+int stack_push(struct Stack *stack, void *data)
 {
-	Node *node;
+	struct StackNode *node;
 
 	if (!stack)
 		log_msg("stack_push: null stack");
@@ -58,7 +46,7 @@ error:
 	return -1;
 }
 
-int stack_is_empty(Stack *stack)
+int stack_is_empty(struct Stack *stack)
 {
 	if (!stack)
 		log_msg("stack_is_empty: null stack!");
@@ -68,9 +56,9 @@ error:
 	return 1;
 }
 
-void *stack_pop(Stack *stack)
+void *stack_pop(struct Stack *stack)
 {
-	Node *node;
+	struct StackNode *node;
 	void *data;
 
 	if (!stack)
@@ -86,7 +74,7 @@ error:
 	return NULL;
 }
 
-static void stack_clear(Stack *stack)
+static void stack_clear(struct Stack *stack)
 {
 	if (!stack)
 		return;
@@ -100,7 +88,7 @@ static void stack_clear(Stack *stack)
 	}
 }
 
-void stack_destroy(Stack* stack)
+void stack_destroy(struct Stack* stack)
 {
 	if (!stack)
 		return;

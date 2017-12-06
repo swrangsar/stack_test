@@ -1,7 +1,8 @@
 #include "rbmap.h"
+
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <errno.h>
 
 
 #define log_err(M)	{perror("error: RBMap: " M); goto error;}

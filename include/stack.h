@@ -3,12 +3,23 @@
 
 #include "types.h"
 
-typedef struct Stack_ Stack;
 
-Stack *stack_new(DestroyFunc);
-int stack_push(Stack*, void*);
-int stack_is_empty(Stack *);
-void *stack_pop(Stack *);
-void stack_destroy(Stack *);
+struct StackNode {
+	struct StackNode *next;
+	void *data;
+};
 
-#endif
+struct Stack {
+	struct StackNode *head;
+	DestroyFunc destroy_func;
+};
+
+
+
+struct Stack *stack_new(DestroyFunc);
+int stack_push(struct Stack*, void*);
+int stack_is_empty(struct Stack *);
+void *stack_pop(struct Stack *);
+void stack_destroy(struct Stack *);
+
+#endif  // STACK_H_

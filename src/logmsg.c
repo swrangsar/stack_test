@@ -1,6 +1,7 @@
 #include "logmsg.h"
 
 #include <errno.h>
+#include <limits.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
@@ -34,7 +35,7 @@ void log_msg(int level, const char *file, int linenum, const char *fmt, ...)
 		va_end(ap);
 
 		if ('\n' != fmt[strlen(fmt)-1]) {
-			char buffer[512];
+			char buffer[LINE_MAX];
 
 			strerror_r(errsv, buffer, sizeof(buffer));
 			fprintf(stderr, ":(%d) %s\n", errsv, buffer);
