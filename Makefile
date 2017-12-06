@@ -40,7 +40,6 @@ clean:
 .PHONY: test
 test:
 	@if test ! -d bin; then mkdir bin; fi
-	$(CC) $(CPPFLAGS) $(ALL_CFLAGS) $(LDFLAGS) test/tester.c $(LDLIBS) -o bin/tester
 	$(CC) $(CPPFLAGS) $(ALL_CFLAGS) $(LDFLAGS) test/map_test.c $(LDLIBS) -o bin/map_test
 
 .PHONY: dist

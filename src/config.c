@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "rbmap.h"
+#include "rbtree.h"
 #include "logmsg.h"
 
 
@@ -14,7 +14,7 @@
 
 
 static int compare(const void *, const void *);
-static void process_line(const char *, struct RBMap *);
+static void process_line(const char *, struct rbtree *);
 
 
 static int compare(const void *a, const void *b)
@@ -27,19 +27,19 @@ static int compare(const void *a, const void *b)
 	return strcmp((const char *)a, (const char *)b);
 }
 
-int get_conf_map(const char *filename, struct RBMap *map)
+int get_conf_map(const char *filename, struct rbtree *map)
 {
 	int ret_val = -1;
 	char line[LINE_MAX];
 	FILE *conf_file = NULL;
 
 	if ((conf_file = fopen(filename, "r"))) {
-		if ((!rbmap_init(map, compare, free, free))) {
+		if ((!rbtree_init(map, compare, free, free))) {
 			while (fgets(line, sizeof(line), conf_file))
 				process_line(line, map);
 			ret_val = 0;
 		} else {
-			log_err("get_conf_map: rbmap_new null\n");
+			log_err("get_conf_map: rbtree_new null\n");
 		}
 
 		fclose(conf_file);
@@ -50,7 +50,7 @@ int get_conf_map(const char *filename, struct RBMap *map)
 	return ret_val;
 }
 
-static void process_line(const char *line, struct RBMap *map)
+static void process_line(const char *line, struct rbtree *map)
 {
 	char key[KEY_SIZE];
 	char val[VAL_SIZE];
@@ -109,7 +109,7 @@ static void process_line(const char *line, struct RBMap *map)
 	strcpy(new_key, key);
 	strcpy(new_val, val);
 
-	if (-1 == rbmap_insert(map, (void *)new_key, (void *)new_val))
+	if (-1 == rbtree_insert(map, (void *)new_key, (void *)new_val))
 		goto error;
 
 	fprintf(stderr, "get_conf_map: key=%s, val=%s\n", key, val);
