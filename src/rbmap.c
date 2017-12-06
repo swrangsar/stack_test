@@ -4,10 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-
-#define log_err(M)	{perror("error: struct RBMap: " M); goto error;}
-#define log_msg(M)	{fprintf(stderr, "error: struct RBMap: " M "\n"); goto error;}
-
+#include "logmsg.h"
 
 
 static struct rbnode *node_new(void *, void *);
@@ -35,21 +32,20 @@ static void inorder(struct RBMap *, TraverseFunc, void *);
 
 static struct rbnode *node_new(void *key, void *value)
 {
-	struct rbnode *node;
-	
-	if (!(node = malloc(sizeof(*node))))
-		log_err("node_new");
+	struct rbnode *node = NULL;
 
-	node->parent = NULL;
-	node->left = NULL;
-	node->right = NULL;
-	node->key = key;
-	node->value = value;
-	node->color = Red;
+	if ((node = malloc(sizeof(*node)))) {
+		node->parent = NULL;
+		node->left = NULL;
+		node->right = NULL;
+		node->key = key;
+		node->value = value;
+		node->color = Red;
+	} else {
+		log_err("node_new");
+	}
 
 	return node;
-error:
-	return NULL;
 }
 
 static struct rbnode *grandparent(const struct rbnode *node)
@@ -73,42 +69,45 @@ static struct rbnode *get_uncle(const struct rbnode *node)
 
 static struct rbnode *get_sibling(const struct rbnode *node)
 {
+	struct rbnode *sibling = NULL;
 	struct rbnode *parent;
 
-	if (!node)
-		log_msg("sibling: node is null!");
-	if (!(parent = node->parent))
-		log_msg("sibling: parent is null!");
+	if (node) {
+		if ((parent = node->parent)) {
+			sibling = (node == parent->left) ? parent->right : parent->left;
+		} else {
+			log_err("sibling: parent is null!\n");
+		}
+	} else {
+		log_err("sibling: node is null!\n");
+	}
 
-	return (node == parent->left)?parent->right:parent->left;
-error:
-	return NULL;
+	return sibling;
 }
 
 static void rotate_left(struct rbnode *node)
 {
 	struct rbnode *parent;
 	struct rbnode *right;
-	
-	if (!node)
-		return;
-	if (!(right = node->right))
-		return;
-	
-	if ((parent = node->parent)) {
-		if (node == parent->left)
-			parent->left = right;
-		else
-			parent->right = right;
+
+	if (node) {
+		if ((right = node->right)) {
+			if ((parent = node->parent)) {
+				if (node == parent->left)
+					parent->left = right;
+				else
+					parent->right = right;
+			}
+
+			node->right = right->left;
+			node->parent = right;
+			right->left = node;
+			right->parent = parent;
+
+			if (node->right)
+				node->right->parent = node;
+		}
 	}
-
-	node->right = right->left;
-	node->parent = right;
-	right->left = node;
-	right->parent = parent;
-
-	if (node->right)
-		node->right->parent = node;
 }
 
 static void rotate_right(struct rbnode *node)
@@ -116,53 +115,29 @@ static void rotate_right(struct rbnode *node)
 	struct rbnode *parent;
 	struct rbnode *left;
 
-	if (!node)
-		return;
-	if (!(left = node->left))
-		return;
+	if (node) {
+		if ((left = node->left)) {
+			if ((parent = node->parent)) {
+				if (node == parent->left)
+					parent->left = left;
+				else
+					parent->right = left;
+			}
 
-	if ((parent = node->parent)) {
-		if (node == parent->left)
-			parent->left = left;
-		else
-			parent->right = left;
+			node->left = left->right;
+			node->parent = left;
+			left->right = node;
+			left->parent = parent;
+
+			if (node->left)
+				node->left->parent = node;
+		}
 	}
-
-	node->left = left->right;
-	node->parent = left;
-	left->right = node;
-	left->parent = parent;
-	
-	if (node->left)
-		node->left->parent = node;
 }
 
 static void node_destroy(struct rbnode *node)
 {
 	free(node);
-}
-
-
-    
-struct RBMap* rbmap_new(CompareFunc cmp, DestroyFunc key_dst, DestroyFunc val_dst)
-{
-	struct RBMap *tree;
-	
-	if (!cmp)
-		log_msg("rbmap_new: null compare_func!");
-
-	tree = malloc(sizeof(*tree));
-	if (!tree)
-		log_err("rbmap_new");
-
-	tree->root = NULL;
-	tree->cmp_func = cmp;
-	tree->key_dst_func = key_dst;
-	tree->val_dst_func = val_dst;
-
-	return tree;
-error:
-	return NULL;
 }
 
 int rbmap_init(struct RBMap *tree, CompareFunc cmp, DestroyFunc key_dst, DestroyFunc val_dst)
@@ -177,104 +152,107 @@ int rbmap_init(struct RBMap *tree, CompareFunc cmp, DestroyFunc key_dst, Destroy
 			tree->val_dst_func = val_dst;
 			ret_val = 0;
 		} else {
-			log_msg("null compare func\n");
+			log_err("null compare func\n");
 		}
 	} else {
-		log_msg("null tree pointer\n");
+		log_err("null tree pointer\n");
 	}
 
-error:
 	return ret_val;
 }
 
 int rbmap_insert(struct RBMap *tree, void *key, void *value)
 {
-	if (!tree)
-		log_msg("rbmap_insert: null tree");
+	int ret_val = -1;
 
-	return insert(tree, key, value, 0);
+	if (tree) {
+		ret_val = insert(tree, key, value, 0);
+	} else {
+		log_err("rbmap_insert: null tree\n");
+	}
 
-error:
-	return -1;
+	return ret_val;
 }
 
 int rbmap_replace(struct RBMap *tree, void *key, void *value)
 {
-	if (!tree)
-		log_msg("rbmap_insert: null tree");
+	int ret_val = -1;
 
-	return insert(tree, key, value, 1);
+	if (tree) {
+		ret_val = insert(tree, key, value, 1);
+	} else {
+		log_err("rbmap_insert: null tree\n");
+	}
 
-error:
-	return -1;
+	return ret_val;
 }
 
 static int insert(struct RBMap *tree, void *key, void *value, int replace)
 {
+	int ret_val = -1;
 	int res;
 	struct rbnode *curr;
 	struct rbnode *new;
 	CompareFunc cmp_func;
 
-	if (!tree)
-		log_msg("insert: null tree!");
+	if (tree) {
+		if ((curr = tree->root)) {
+			if ((cmp_func = tree->cmp_func)) {
+				do {
+					res = cmp_func(key, curr->key);
+					if (res < 0) {
+						if (curr->left) {
+							curr = curr->left;
+						} else if ((new = node_new(key, value))) {
+							curr->left = new;
+							new->parent = curr;
+							insert_cases(tree, new);
+							ret_val = 0;
+							break;
+						}
+					} else if (res > 0) {
+						if (curr->right) {
+							curr = curr->right;
+						} else if ((new = node_new(key, value))) {
+							curr->right = new;
+							new->parent = curr;
+							insert_cases(tree, new);
+							ret_val = 0;
+							break;
+						}
+					} else {
+						if (tree->val_dst_func)
+							tree->val_dst_func(curr->value);
+						curr->value = value;
 
-	if (!(curr = tree->root)) {
-		if ((new = node_new(key, value))) {
-			tree->root = new;
-			goto out;
+						if (replace) {
+							if (tree->key_dst_func)
+								tree->key_dst_func(curr->key);
+							curr->key = key;
+						} else {
+							if (tree->key_dst_func)
+								tree->key_dst_func(key);
+						}
+
+						ret_val = 0;
+						break;
+					}
+				} while (1);
+			} else {
+				log_err("insert: cmp_func is null\n");
+			}
 		} else {
-			goto error;
+			if ((new = node_new(key, value))) {
+				tree->root = new;
+				insert_cases(tree, new);
+				ret_val = 0;
+			}
 		}
+	} else {
+		log_err("insert: null tree\n");
 	}
 
-	if (!(cmp_func = tree->cmp_func))
-		log_msg("insert: cmp_func is null!");
-
-	do {
-		res = cmp_func(key, curr->key);
-		if (res < 0) {
-			if (curr->left) {
-				curr = curr->left;
-			} else if ((new = node_new(key, value))) {
-				curr->left = new;
-				new->parent = curr;
-				goto out;
-			} else {
-				goto error;
-			}
-		} else if (res > 0) {
-			if (curr->right) {
-				curr = curr->right;
-			} else if ((new = node_new(key, value))) {
-				curr->right = new;
-				new->parent = curr;
-				goto out;
-			} else {
-				goto error;
-			}
-		} else {
-			if (tree->val_dst_func)
-				tree->val_dst_func(curr->value);
-			curr->value = value;
-
-			if (replace) {
-				if (tree->key_dst_func)
-					tree->key_dst_func(curr->key);
-				curr->key = key;
-			} else {
-				if (tree->key_dst_func)
-					tree->key_dst_func(key);
-			}
-			return 0;
-		}
-	} while (1);
-
-out:
-	insert_cases(tree, new);
-	return 0;
-error:
-	return -1;
+	return ret_val;
 }
 
 static void insert_cases(struct RBMap *tree, struct rbnode *node)
@@ -342,48 +320,56 @@ error:
 
 void *rbmap_search(struct RBMap *tree, const void *key)
 {
-	struct rbnode *found;
+	void *value = NULL;
 
-	if (!tree)
-		log_msg("rbmap_search: tree is null!");
+	if (tree) {
+		struct rbnode *found;
+		if ((found = search(tree, key)))
+			value = found->value;
+	} else {
+		log_err("rbmap_search: tree is null\n");
+	}
 
-	if ((found = search(tree, key)))
-		return found->value;
-
-error:
-	return NULL;
+	return value;
 }
 
 static struct rbnode *search(struct RBMap *tree, const void *key)
 {
+	struct rbnode *found = NULL;
 	int res;
-	struct rbnode *curr;
+	struct rbnode *curr = NULL;
 	CompareFunc cmp_func;
 
-	if (!tree)
-		log_msg("search: tree is null!");
-	if (!(curr = tree->root))
-		return NULL;
-	if (!(cmp_func = tree->cmp_func))
-		log_msg("search: cmp_func is null!");
-
-	while ((res = cmp_func(key, curr->key))) {
-		if (res < 0) {
-			if (curr->left)
-				curr = curr->left;
-			else
-				return NULL;
-		} else {
-			if (curr->right)
-				curr = curr->right;
-			else
-				return NULL;
+	if (tree) {
+		if ((curr = tree->root)) {
+			if ((cmp_func = tree->cmp_func)) {
+				while ((res = cmp_func(key, curr->key))) {
+					if (res < 0) {
+						if (curr->left) {
+							curr = curr->left;
+						} else {
+							curr = NULL;
+							break;
+						}
+					} else {
+						if (curr->right) {
+							curr = curr->right;
+						} else {
+							curr = NULL;
+							break;
+						}
+					}
+				}
+			} else {
+				curr = NULL;
+				log_err("search: cmp_func is null\n");
+			}
 		}
+	} else {
+		log_err("search: tree is null\n");
 	}
 
 	return curr;
-error:
-	return NULL;
 }
 
 
@@ -478,35 +464,36 @@ static void replace_with_child(struct RBMap *tree, struct rbnode *node, struct r
 {
 	struct rbnode *parent;
 
-	if (!tree)
-		log_msg("replace_child: tree is null!");
-	if (!node)
-		log_msg("replace_child: node is null!");
+	if (tree) {
+		if (node) {
+			if ((parent = node->parent)) {
+				if (node == parent->left)
+					parent->left = child;
+				else
+					parent->right = child;
+			} else {
+				tree->root = child;
+			}
 
-	if ((parent = node->parent)) {
-		if (node == parent->left)
-			parent->left = child;
-		else
-			parent->right = child;
+
+			if (child) {
+				child->parent = parent;
+				child->color = node->color;
+			}
+
+			if (tree->key_dst_func)
+				tree->key_dst_func(node->key);
+			node->key = NULL;
+			if (tree->val_dst_func)
+				tree->val_dst_func(node->value);
+			node->value= NULL;
+			node_destroy(node);
+		} else {
+			log_err("replace_child: node is null\n");
+		}
 	} else {
-		tree->root = child;
+		log_err("replace_child: tree is null\n");
 	}
-
-
-	if (child) {
-		child->parent = parent;
-		child->color = node->color;
-	}
-
-	if (tree->key_dst_func)
-		tree->key_dst_func(node->key);
-	node->key = NULL;
-	if (tree->val_dst_func)
-		tree->val_dst_func(node->value);
-	node->value= NULL;
-	node_destroy(node);
-error:
-	return;
 }
 
 static void remove_cases(struct RBMap *tree, struct rbnode *node)
@@ -618,89 +605,84 @@ void rbmap_foreach(struct RBMap *tree, TraverseFunc trav_func, void *data)
 
 static void inorder(struct RBMap *tree, TraverseFunc trav_func, void *data)
 {
-	struct rbnode *curr;
-	struct rbnode *prev;
 	struct rbnode *next;
 
-	if (!tree)
-		log_msg("inorder: null tree!");
+	if (tree) {
+		struct rbnode *curr = tree->root;
+		struct rbnode *prev = NULL;
 
-	prev = NULL;
-	curr = tree->root;
-
-	while (curr) {
-		if (prev == curr->parent) {
-			if (!(next = curr->left)) {
+		while (curr) {
+			if (prev == curr->parent) {
+				if (!(next = curr->left)) {
+					if (trav_func(curr->key, curr->value, data))
+						break;
+					next = curr->right?curr->right:curr->parent;
+				}
+			} else if (prev == curr->left) {
 				if (trav_func(curr->key, curr->value, data))
 					break;
 				next = curr->right?curr->right:curr->parent;
+			} else if (prev == curr->right) {
+				next = curr->parent;
+			} else {
+				log_err("inorder: curr is not l, r or p\n");
 			}
-		} else if (prev == curr->left) {
-			if (trav_func(curr->key, curr->value, data))
-				break;
-			next = curr->right?curr->right:curr->parent;
-		} else if (prev == curr->right) {
-			next = curr->parent;
-		} else {
-			log_msg("inorder: curr is not l, r or p!");
+			prev = curr;
+			curr = next;
 		}
-		prev = curr;
-		curr = next;
-	}
 
-error:
-	return;
+	} else {
+		log_err("inorder: null tree\n");
+	}
 }
 
 void rbmap_clear(struct RBMap *tree)
 {
-	struct rbnode *curr;
-	struct rbnode *parent;
-	DestroyFunc key_dst_func;
-	DestroyFunc val_dst_func;
 
-	if (!tree)
-		log_msg("rbmap_clear: null tree!");
+	if (tree) {
+		struct rbnode *curr;
 
-	if (!(curr = tree->root))
-		return;
+		if ((curr = tree->root)) {
+			DestroyFunc key_dst_func;
+			DestroyFunc val_dst_func;
+			key_dst_func = tree->key_dst_func;
+			val_dst_func = tree->val_dst_func;
 
-	key_dst_func = tree->key_dst_func;
-	val_dst_func = tree->val_dst_func;
+			do {
+				if (curr->left) {
+					curr = curr->left;
+				} else if (curr->right) {
+					curr = curr->right;
+				} else {
+					struct rbnode *parent;
 
-	do {
-		if (curr->left) {
-			curr = curr->left;
-		} else if (curr->right) {
-			curr = curr->right;
+					if ((parent = curr->parent)) {
+						if (curr == parent->left)
+							parent->left = NULL;
+						else
+							parent->right = NULL;
+					} else {
+						tree->root = NULL;
+					}
+
+					if (key_dst_func)
+						key_dst_func(curr->key);
+					if (val_dst_func)
+						val_dst_func(curr->value);
+					node_destroy(curr);
+					curr = parent;
+				}
+			} while (curr);
 		} else {
-			if ((parent = curr->parent)) {
-				if (curr == parent->left)
-					parent->left = NULL;
-				else
-					parent->right = NULL;
-			} else {
-				tree->root = NULL;
-			}
-
-			if (key_dst_func)
-				key_dst_func(curr->key);
-			if (val_dst_func)
-				val_dst_func(curr->value);
-			node_destroy(curr);
-			curr = parent;
+			log_err("rbmap_clear: null tree!");
 		}
-	} while (curr);
-
-error:
-	return;
+	}
 }
 
 void rbmap_destroy(struct RBMap *tree)
 {
-	if (!tree)
-		return;
-
-	rbmap_clear(tree);
-	free(tree);
+	if (tree) {
+		rbmap_clear(tree);
+		free(tree);
+	}
 }
