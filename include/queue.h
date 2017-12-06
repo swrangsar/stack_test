@@ -1,6 +1,8 @@
 #ifndef QUEUE_H_
 #define QUEUE_H_
 
+#include <stdbool.h>
+
 #include "types.h"
 #include "stack.h"
 
@@ -11,9 +13,9 @@ struct Queue {
 	DestroyFunc destroy_func;
 };
 
-struct Queue *queue_new(DestroyFunc);
+bool queue_init(DestroyFunc destroy_func, struct Queue *queue);
 int enqueue(struct Queue *, void *);
-int queue_is_empty(struct Queue *);
+bool is_queue_empty(struct Queue *queue);
 void *dequeue(struct Queue *);
 void queue_destroy(struct Queue *);
 

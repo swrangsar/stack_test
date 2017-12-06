@@ -4,84 +4,88 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "logmsg.h"
 
-#define log_err(M)	{perror("error: queue: " M); goto error;}
-#define log_msg(M)	{fprintf(stderr, "error: queue: " M "\n"); goto error;}
 
 
 static void queue_clear(struct Queue *queue);
 
-
-
-
-
-struct Queue *queue_new(DestroyFunc destroy_func)
+bool queue_init(DestroyFunc destroy_func, struct Queue *queue)
 {
-	struct Queue *queue;
-	
-	if (!(queue = malloc(sizeof(*queue))))
-		log_err("queue_new");
+	bool is_valid = false;
 
-	queue->head = NULL;
-	queue->tail = NULL;
-	queue->destroy_func = destroy_func;
-error:
-	return queue;
+	if (queue) {
+		queue->head = NULL;
+		queue->tail = NULL;
+		queue->destroy_func = destroy_func;
+		is_valid = true;
+	} else {
+		log_err("init null queue\n");
+	}
+
+	return is_valid;
 }
 
 int enqueue(struct Queue *queue, void *data)
 {
+	int ret_code = -1;
 	struct node *node;
-	
-	if (!queue)
-		log_msg("enqueue: null queue!");
-	if (!(node = malloc(sizeof(*node))))
-		log_err("enqueue: malloc node");
 
-	node->data = data;
-	node->next = NULL;
-	if (queue->tail) {
-		queue->tail->next = node;
-		queue->tail = node;
+	if (queue) {
+		if ((node = malloc(sizeof(*node)))) {
+			node->data = data;
+			node->next = NULL;
+			if (queue->tail) {
+				queue->tail->next = node;
+				queue->tail = node;
+			} else {
+				queue->tail = node;
+				queue->head = node;
+			}
+
+			ret_code = 0;
+		} else {
+			log_err("enqueue: malloc node");
+		}
 	} else {
-		queue->tail = node;
-		queue->head = node;
+		log_err("enqueue: null queue\n");
 	}
-	
-	return 0;
-error:
-	return -1;
+
+	return ret_code;
 }
 
-int queue_is_empty(struct Queue *queue)
+bool is_queue_empty(struct Queue *queue)
 {
-	if (!queue)
-		log_msg("queue_is_empty: null queue!");
+	bool is_empty = true;
 
-	return !queue->head;
-error:
-	return 1;
+	if (queue) {
+		is_empty = !queue->head;
+	} else {
+		log_err("null queue\n");
+	}
+
+	return is_empty;
 }
 
 void *dequeue(struct Queue *queue)
 {
 	struct node *node;
-	void *data;
-	
-	if (!queue)
-		log_msg("dequeue: null queue!");
-	if (!(node = queue->head))
-		return NULL;
+	void *data = NULL;
 
-	data = node->data;
-	queue->head = node->next;
-	if (!queue->head)
-		queue->tail = NULL;
+	if (queue) {
+		if ((node = queue->head)) {
+			data = node->data;
+			queue->head = node->next;
+			if (!queue->head)
+				queue->tail = NULL;
 
-	free(node);
+			free(node);
+		}
+	} else {
+		log_err("dequeue: null queue\n");
+	}
+
 	return data;
-error:
-	return NULL;
 }
 
 static void queue_clear(struct Queue *queue)
@@ -90,19 +94,19 @@ static void queue_clear(struct Queue *queue)
 		return;
 
 	if (queue->destroy_func) {
-		while (!queue_is_empty(queue))
+		while (!is_queue_empty(queue))
 			queue->destroy_func(dequeue(queue));
 	} else {
-		while (!queue_is_empty(queue))
+		while (!is_queue_empty(queue))
 			dequeue(queue);
 	}
 }
 
 void queue_destroy(struct Queue *queue)
 {
-	if (!queue)
-		return;
-
-	queue_clear(queue);
-	free(queue);
+	if (queue) {
+		queue_clear(queue);
+	} else {
+		log_err("can't destroy null queue\n");
+	}
 }
