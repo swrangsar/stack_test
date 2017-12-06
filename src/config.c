@@ -1,8 +1,10 @@
 #include "config.h"
+
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
-
 #include <string.h>
+
 #include "rbmap.h"
 
 
@@ -10,12 +12,11 @@
 #define log_msg(M)	{fprintf(stderr, "error: config: " M "\n"); goto error;}
 
 #define KEY_SIZE	512
-#define VAL_SIZE	2048
-#define LINE_SIZE	(KEY_SIZE + VAL_SIZE)
+#define VAL_SIZE	512
 
 
 static int compare(const void *, const void *);
-static void process_line(const char *, RBMap *);
+static void process_line(const char *, struct RBMap *);
 
 
 static int compare(const void *a, const void *b)
@@ -28,10 +29,10 @@ static int compare(const void *a, const void *b)
 	return strcmp((const char *)a, (const char *)b);
 }
 
-RBMap *get_conf_map(const char *filename)
+struct RBMap *get_conf_map(const char *filename)
 {
-	char line[LINE_SIZE];
-	RBMap *map = NULL;
+	char line[LINE_MAX];
+	struct RBMap *map = NULL;
 	FILE *conf_file = NULL;
 
 	if (!(conf_file = fopen(filename, "r")))
@@ -49,7 +50,7 @@ error:
 	return map;
 }
 
-static void process_line(const char *line, RBMap *map)
+static void process_line(const char *line, struct RBMap *map)
 {
 	char key[KEY_SIZE];
 	char val[VAL_SIZE];
